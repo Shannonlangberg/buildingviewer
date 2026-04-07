@@ -92,23 +92,25 @@ type Props = {
 export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
   return (
     <aside
-      className="flex flex-col gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-md lg:min-h-0 lg:max-h-[calc(100vh-8rem)]"
+      className="flex flex-col gap-3 rounded-2xl border border-white/[0.09] bg-white/[0.04] p-5 shadow-xl shadow-black/25 ring-1 ring-white/[0.05] backdrop-blur-xl lg:min-h-0 lg:max-h-[calc(100vh-8rem)]"
       style={{
         display: "flex",
         flexDirection: "column",
         gap: 12,
         borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.08)",
-        background: "rgba(255,255,255,0.03)",
-        padding: 16,
+        border: "1px solid rgba(255,255,255,0.09)",
+        background: "rgba(255,255,255,0.04)",
+        padding: 20,
         boxSizing: "border-box",
       }}
     >
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+        <h2 className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
           Spaces
         </h2>
-        <p className="mt-1 text-sm text-slate-400">Select a room to inspect media.</p>
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+          Select a room to inspect media.
+        </p>
       </div>
       <nav
         className="flex max-h-[min(50vh,24rem)] flex-col gap-2 overflow-y-auto pr-1 lg:max-h-[calc(100vh-10rem)]"
@@ -124,10 +126,10 @@ export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
               onClick={() => onSelect(room.id)}
               style={roomButtonStyle(active)}
               className={cn(
-                "transition",
+                "transition duration-200",
                 active
-                  ? "ring-1 ring-white/10"
-                  : "hover:border-white/[0.12] hover:bg-white/[0.05]"
+                  ? "ring-1 ring-cyan-400/20 shadow-md shadow-black/20"
+                  : "hover:border-white/[0.14] hover:bg-white/[0.06]"
               )}
             >
               <span

@@ -4,15 +4,15 @@
 
 /* Plain fallbacks so the shell stays dark even if utility classes fail to load */
 html {
-  background-color: #070a0f;
-  color: #e2e8f0;
+  background-color: #060912;
+  color: #e8ecf4;
   font-family: var(--font-body), ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 :root {
-  --background: #070a0f;
-  --foreground: #e2e8f0;
+  --background: #060912;
+  --foreground: #e8ecf4;
 }
 
 body {
@@ -21,6 +21,13 @@ body {
   background-color: var(--background);
   font-family: var(--font-body), system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: rgba(34, 211, 238, 0.22);
+  color: #f8fafc;
 }
 
 h1,

@@ -23,6 +23,10 @@ export interface Room {
   color: string;
   label_x: number;
   label_y: number;
+  /** Text colour for the room name on the floor plan (hex or CSS colour). */
+  label_text_color?: string | null;
+  /** Font size in SVG viewBox units (roughly 1.2–5). */
+  label_font_size?: number | null;
   shape_type: ShapeType;
   rect_x: number | null;
   rect_y: number | null;

@@ -97,7 +97,7 @@ export function ImageUploader({ roomId, disabled, onUploaded }: Props) {
           <input
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-sky-500/40"
+            className="mt-1 w-full rounded-xl border border-white/[0.10] bg-white/[0.05] px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-cyan-400/35 focus:ring-1 focus:ring-cyan-400/25"
             placeholder="e.g. Stage repaint"
           />
         </label>
@@ -106,7 +106,7 @@ export function ImageUploader({ roomId, disabled, onUploaded }: Props) {
           <input
             value={uploaderName}
             onChange={(e) => setUploaderName(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-sky-500/40"
+            className="mt-1 w-full rounded-xl border border-white/[0.10] bg-white/[0.05] px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-cyan-400/35 focus:ring-1 focus:ring-cyan-400/25"
             placeholder="e.g. Sam"
           />
         </label>
@@ -114,8 +114,8 @@ export function ImageUploader({ roomId, disabled, onUploaded }: Props) {
       <div
         {...getRootProps()}
         className={cn(
-          "cursor-pointer rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-4 py-6 text-center text-sm text-slate-400 transition hover:border-sky-400/40 hover:bg-white/[0.04]",
-          isDragActive && "border-sky-400/50 bg-sky-500/10",
+          "cursor-pointer rounded-2xl border border-dashed border-white/[0.14] bg-white/[0.03] px-5 py-7 text-center text-sm text-slate-400 shadow-inner shadow-black/20 transition duration-300 hover:border-cyan-400/35 hover:bg-cyan-500/[0.06]",
+          isDragActive && "border-cyan-400/45 bg-cyan-500/[0.08] shadow-cyan-500/10",
           (disabled || progress !== null) && "pointer-events-none opacity-60"
         )}
       >
@@ -126,9 +126,9 @@ export function ImageUploader({ roomId, disabled, onUploaded }: Props) {
         </p>
       </div>
       {progress !== null && (
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10 ring-1 ring-white/5">
           <div
-            className="h-full bg-sky-500/80 transition-all"
+            className="h-full bg-gradient-to-r from-cyan-500/90 to-sky-500/80 transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>

@@ -30,6 +30,8 @@ type PatchBody = {
         | "color"
         | "status"
         | "name"
+        | "label_text_color"
+        | "label_font_size"
       >
     > & { id: string }
   >;

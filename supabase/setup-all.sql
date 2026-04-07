@@ -27,6 +27,8 @@ create table if not exists public.rooms (
   color text not null default '#64748b',
   label_x numeric not null default 50,
   label_y numeric not null default 50,
+  label_text_color text default '#f8fafc',
+  label_font_size numeric default 2.1,
   shape_type text not null default 'rect'
     check (shape_type in ('rect', 'polygon')),
   rect_x numeric,

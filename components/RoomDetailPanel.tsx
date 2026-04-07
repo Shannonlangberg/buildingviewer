@@ -252,8 +252,10 @@ export function RoomDetailPanel({
 
   if (!room) {
     return (
-      <section className="flex min-h-[240px] flex-col justify-center rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 text-center backdrop-blur-md">
-        <p className="text-sm text-slate-400">Choose a room to view its gallery.</p>
+      <section className="flex min-h-[240px] flex-col justify-center rounded-2xl border border-white/[0.09] bg-white/[0.04] p-8 text-center shadow-xl shadow-black/20 ring-1 ring-white/[0.05] backdrop-blur-xl">
+        <p className="text-sm leading-relaxed text-slate-500">
+          Choose a room to view its gallery.
+        </p>
       </section>
     );
   }
@@ -262,10 +264,24 @@ export function RoomDetailPanel({
   const heroMime = hero ? guessMimeFromPath(hero.storage_path) : "";
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-md lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
-      <header className="flex flex-wrap items-start justify-between gap-2 border-b border-white/[0.06] pb-3">
+    <section
+      className={cn(
+        "flex flex-col gap-5 rounded-2xl p-5 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto",
+        sleekGallery
+          ? "border border-white/[0.14] bg-white/[0.06] shadow-[0_12px_48px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-white/[0.08]"
+          : "border border-white/[0.09] bg-white/[0.04] shadow-lg shadow-black/20 ring-1 ring-white/[0.05] backdrop-blur-xl"
+      )}
+    >
+      <header
+        className={cn(
+          "flex flex-wrap items-start justify-between gap-2 pb-3",
+          sleekGallery
+            ? "border-b border-white/15"
+            : "border-b border-white/[0.06]"
+        )}
+      >
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-white">
+          <h2 className="font-display text-lg font-semibold tracking-tight text-white sm:text-xl">
             {room.name}
           </h2>
           <span
@@ -279,7 +295,12 @@ export function RoomDetailPanel({
         </div>
         {canPersist && (
           <div
-            className="flex shrink-0 rounded-lg bg-black/35 p-0.5 ring-1 ring-white/10"
+            className={cn(
+              "flex shrink-0 rounded-full p-0.5 ring-1",
+              presentGallery
+                ? "bg-white/[0.08] ring-white/[0.12] backdrop-blur-md"
+                : "bg-black/40 ring-white/[0.08]"
+            )}
             role="group"
             aria-label="Gallery view mode"
           >
@@ -287,9 +308,9 @@ export function RoomDetailPanel({
               type="button"
               onClick={() => setPresentGallery(true)}
               className={cn(
-                "rounded-md px-2.5 py-1 text-[11px] font-medium transition",
+                "rounded-full px-3 py-1.5 text-[11px] font-semibold transition duration-200",
                 presentGallery
-                  ? "bg-white/12 text-white shadow-sm"
+                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
                   : "text-slate-400 hover:text-slate-200"
               )}
             >
@@ -299,9 +320,9 @@ export function RoomDetailPanel({
               type="button"
               onClick={() => setPresentGallery(false)}
               className={cn(
-                "rounded-md px-2.5 py-1 text-[11px] font-medium transition",
+                "rounded-full px-3 py-1.5 text-[11px] font-semibold transition duration-200",
                 !presentGallery
-                  ? "bg-white/12 text-white shadow-sm"
+                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
                   : "text-slate-400 hover:text-slate-200"
               )}
             >
@@ -311,29 +332,38 @@ export function RoomDetailPanel({
         )}
       </header>
 
-      <ImageUploader
-        roomId={room.id}
-        disabled={!canPersist}
-        onUploaded={() => void load()}
-      />
-      {!canPersist && (
-        <p className="text-[11px] text-slate-500">
-          Uploads and reordering need Supabase: set{" "}
-          <code className="text-slate-400">SUPABASE_SERVICE_ROLE_KEY</code> on
-          the server and run <code className="text-slate-400">schema.sql</code>.
-        </p>
+      {!sleekGallery && (
+        <>
+          <ImageUploader
+            roomId={room.id}
+            disabled={!canPersist}
+            onUploaded={() => void load()}
+          />
+          {!canPersist && (
+            <p className="text-[11px] text-slate-500">
+              Uploads and reordering need Supabase: set{" "}
+              <code className="text-slate-400">SUPABASE_SERVICE_ROLE_KEY</code>{" "}
+              on the server and run <code className="text-slate-400">schema.sql</code>.
+            </p>
+          )}
+        </>
       )}
 
       <div className="space-y-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <h3
+          className={cn(
+            "text-xs font-semibold uppercase tracking-wider",
+            sleekGallery ? "text-slate-400" : "text-slate-500"
+          )}
+        >
           Hero preview
         </h3>
         <div
           className={cn(
-            "relative aspect-video w-full overflow-hidden border border-white/[0.08] bg-black/40",
+            "relative aspect-video w-full overflow-hidden",
             sleekGallery
-              ? "rounded-2xl ring-1 ring-white/[0.06]"
-              : "rounded-xl"
+              ? "rounded-2xl border border-white/15 bg-white/[0.04] shadow-inner ring-1 ring-white/10 backdrop-blur-md"
+              : "rounded-xl border border-white/[0.08] bg-black/40"
           )}
         >
           {loading && (
@@ -387,7 +417,7 @@ export function RoomDetailPanel({
         {hero && (
           <div className="space-y-3">
             <dl className="grid gap-1 text-xs text-slate-400">
-              {!canPersist && (
+              {(sleekGallery || !canPersist) && (
                 <div>
                   <dt className="inline text-slate-500">Label: </dt>
                   <dd className="inline text-slate-300">
@@ -406,7 +436,7 @@ export function RoomDetailPanel({
                 </dd>
               </div>
             </dl>
-            {canPersist && (
+            {canPersist && !sleekGallery && (
               <div className="border-t border-white/[0.06] pt-3">
                 <label
                   htmlFor={`hero-label-${hero.id}`}
@@ -461,7 +491,12 @@ export function RoomDetailPanel({
       </div>
 
       <div>
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <h3
+          className={cn(
+            "mb-2 text-xs font-semibold uppercase tracking-wider",
+            sleekGallery ? "text-slate-400" : "text-slate-500"
+          )}
+        >
           {sleekGallery ? `${room.name} Gallery` : "Gallery · drag to reorder"}
         </h3>
         {images.length === 0 && !loading ? (
@@ -545,8 +580,9 @@ export function RoomDetailPanel({
         ) : (
           <ul
             className={cn(
-              "grid grid-cols-3 sm:grid-cols-4",
-              sleekGallery ? "gap-3" : "gap-2"
+              sleekGallery
+                ? "grid max-h-[min(44vh,380px)] grid-cols-2 gap-3 overflow-y-auto overscroll-contain pr-0.5 [scrollbar-gutter:stable]"
+                : "grid grid-cols-3 gap-2 sm:grid-cols-4"
             )}
           >
             {images.map((img) => {
@@ -555,7 +591,6 @@ export function RoomDetailPanel({
               const pdf =
                 guessMimeFromPath(img.storage_path) === "application/pdf";
               const active = img.id === heroId;
-              const deleting = deletingImageId === img.id;
               return (
                 <li key={img.id} className="relative">
                   <button
@@ -565,10 +600,10 @@ export function RoomDetailPanel({
                       if (raster) openPresentationFor(img);
                     }}
                     className={cn(
-                      "relative block aspect-square w-full overflow-hidden border bg-black/30",
+                      "relative block w-full overflow-hidden",
                       sleekGallery
-                        ? "rounded-xl border-white/[0.12] hover:border-white/25"
-                        : "rounded-lg border-white/10 hover:border-white/20",
+                        ? "aspect-[4/3] rounded-xl border border-white/15 bg-white/[0.05] shadow-sm ring-1 ring-white/10 backdrop-blur-sm transition hover:border-white/25 hover:bg-white/[0.08]"
+                        : "aspect-square rounded-lg border border-white/10 bg-black/30 hover:border-white/20",
                       active
                         ? "border-sky-400/60 ring-1 ring-sky-400/30"
                         : ""
@@ -593,21 +628,6 @@ export function RoomDetailPanel({
                       </span>
                     )}
                   </button>
-                  {sleekGallery && canPersist && (
-                    <button
-                      type="button"
-                      title="Remove from gallery"
-                      disabled={deleting}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        void deleteRoomImage(img.id);
-                      }}
-                      className="absolute right-1 top-1 z-[2] rounded bg-rose-950/90 px-1.5 py-0.5 text-[9px] font-semibold text-rose-100 shadow-md ring-1 ring-rose-500/30 hover:bg-rose-900 disabled:opacity-50"
-                    >
-                      {deleting ? "…" : "✕"}
-                    </button>
-                  )}
                 </li>
               );
             })}
@@ -621,7 +641,7 @@ export function RoomDetailPanel({
         slides={presentationSlides}
         onClose={() => setPresentationOpen(false)}
         onIndexChange={setPresentationIndex}
-        canManage={canPersist}
+        canManage={canPersist && !presentGallery}
         deletingImageId={deletingImageId}
         onDeleteCurrent={async () => {
           const s = presentationSlides[presentationIndex];
@@ -629,7 +649,7 @@ export function RoomDetailPanel({
           await deleteRoomImage(s.id);
         }}
         onSaveCaption={
-          canPersist
+          canPersist && !presentGallery
             ? async (caption) => {
                 const s = presentationSlides[presentationIndex];
                 if (!s) return false;

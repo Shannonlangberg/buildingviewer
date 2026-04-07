@@ -1,3 +1,7 @@
+import {
+  DEFAULT_LABEL_FONT_SIZE,
+  DEFAULT_LABEL_TEXT_COLOR,
+} from "./room-label-style";
 import type { RoomStatus, ShapeType } from "./types";
 
 /** Default geometry for a new rectangular zone (viewBox 0–100). */
@@ -22,6 +26,8 @@ export type NewRoomInsert = {
   color: string;
   label_x: number;
   label_y: number;
+  label_text_color: string;
+  label_font_size: number;
   shape_type: ShapeType;
   rect_x: number | null;
   rect_y: number | null;
@@ -52,6 +58,8 @@ export function buildNewRoomRow(params: {
       color,
       label_x: 50,
       label_y: 47,
+      label_text_color: DEFAULT_LABEL_TEXT_COLOR,
+      label_font_size: DEFAULT_LABEL_FONT_SIZE,
       shape_type: "polygon",
       rect_x: null,
       rect_y: null,
@@ -70,6 +78,8 @@ export function buildNewRoomRow(params: {
     color,
     label_x: DEFAULT_NEW_RECT.label_x,
     label_y: DEFAULT_NEW_RECT.label_y,
+    label_text_color: DEFAULT_LABEL_TEXT_COLOR,
+    label_font_size: DEFAULT_LABEL_FONT_SIZE,
     shape_type: "rect",
     rect_x: DEFAULT_NEW_RECT.rect_x,
     rect_y: DEFAULT_NEW_RECT.rect_y,

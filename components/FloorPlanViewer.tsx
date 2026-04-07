@@ -6,6 +6,10 @@ import {
   type LayoutPointerDragState,
   svgClientToViewBox,
 } from "@/lib/floorplan-edit";
+import {
+  effectiveLabelFill,
+  effectiveLabelFontSize,
+} from "@/lib/room-label-style";
 import type { Floorplan, RectResizeHandleId, Room } from "@/lib/types";
 import { FloorPlanCanvas } from "./FloorPlanCanvas";
 import { PolygonVertexHandles } from "./PolygonVertexHandles";
@@ -207,15 +211,18 @@ export function FloorPlanViewer({
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0e14] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+      className="relative w-full overflow-hidden rounded-2xl border border-white/[0.10] bg-gradient-to-b from-white/[0.05] via-[#0a1018] to-[#070b11] shadow-2xl shadow-black/30 ring-1 ring-white/[0.06] backdrop-blur-sm"
       style={{
         position: "relative",
         width: "100%",
         overflow: "hidden",
         borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.08)",
-        background: "#0a0e14",
+        border: "1px solid rgba(255,255,255,0.10)",
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, #0a1018 45%, #070b11 100%)",
         boxSizing: "border-box",
+        boxShadow:
+          "inset 0 1px 0 rgba(255,255,255,0.06), 0 24px 48px rgba(0,0,0,0.35)",
       }}
     >
       <div
@@ -246,11 +253,11 @@ export function FloorPlanViewer({
               x={room.label_x}
               y={room.label_y}
               textAnchor="middle"
-              fill="rgba(248,250,252,0.92)"
+              fill={effectiveLabelFill(room)}
               style={{
                 fontFamily:
                   "var(--font-body, ui-sans-serif), system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-                fontSize: "2.1px",
+                fontSize: `${effectiveLabelFontSize(room)}px`,
                 fontWeight: 600,
                 pointerEvents: editMode ? "auto" : "none",
                 cursor: editMode ? "grab" : "default",
