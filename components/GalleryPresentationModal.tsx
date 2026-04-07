@@ -123,7 +123,7 @@ export function GalleryPresentationModal({
 
   const node = (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-label="Gallery presentation"
@@ -135,7 +135,8 @@ export function GalleryPresentationModal({
         aria-label="Close overlay"
       />
       <div
-        className="relative z-[1] flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-app-panel shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
+        className="relative z-[1] flex max-h-[95dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-app-panel shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:max-w-5xl sm:rounded-2xl"
+        style={{ paddingBottom: "max(0px, var(--safe-bottom))" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute right-3 top-3 z-20 flex items-center gap-2">
@@ -162,8 +163,8 @@ export function GalleryPresentationModal({
           </button>
         </div>
 
-        <div className="flex min-h-0 flex-col pt-12">
-          <div className="relative flex min-h-[200px] w-full items-center justify-center px-4 pb-4 sm:min-h-[min(52vh,520px)] sm:px-10 sm:pb-6">
+        <div className="flex min-h-0 flex-col overflow-y-auto overscroll-contain pt-10 sm:pt-12">
+          <div className="relative flex min-h-[180px] w-full items-center justify-center px-2 pb-3 sm:min-h-[min(52vh,520px)] sm:px-10 sm:pb-6">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={slide.src}

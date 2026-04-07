@@ -331,6 +331,7 @@ export function FloorPlanViewer({
           baseLayerOpacity={baseDimOpacity ?? baseLayerOpacity}
           viewport={effectiveViewport}
           onBackdropClick={!editMode ? backdropClick : undefined}
+          editMode={editMode}
         >
           <RoomZoneOverlay
             rooms={rooms}
@@ -376,9 +377,9 @@ export function FloorPlanViewer({
         </FloorPlanCanvas>
       </div>
 
-      {/* Compass rose — HTML overlay, top-center between floating panels */}
-      <div className="pointer-events-none absolute left-1/2 top-4 z-20 flex -translate-x-1/2 flex-col items-center">
-        <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-white/[0.12] bg-black/55 shadow-xl shadow-black/40 backdrop-blur-md sm:h-[4.5rem] sm:w-[4.5rem]">
+      {/* Compass rose — HTML overlay, top-center (hidden on small mobile) */}
+      <div className="pointer-events-none absolute left-1/2 top-2 z-20 hidden -translate-x-1/2 flex-col items-center sm:flex sm:top-4">
+        <div className="relative flex h-12 w-12 items-center justify-center rounded-full border border-white/[0.12] bg-black/55 shadow-xl shadow-black/40 backdrop-blur-md sm:h-16 sm:w-16 md:h-[4.5rem] md:w-[4.5rem]">
           {/* Outer tick ring */}
           <svg
             viewBox="0 0 72 72"
@@ -429,11 +430,11 @@ export function FloorPlanViewer({
       </div>
 
       {!editMode && (
-        <div className="pointer-events-auto absolute bottom-6 left-6 z-20 flex flex-col gap-0.5 rounded-xl border border-white/[0.12] bg-black/65 p-1 shadow-xl backdrop-blur-md">
+        <div className="pointer-events-auto absolute bottom-3 left-3 z-20 flex flex-col gap-0.5 rounded-xl border border-white/[0.12] bg-black/65 p-1 shadow-xl backdrop-blur-md sm:bottom-6 sm:left-6">
           <button
             type="button"
             aria-label="Zoom in"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-lg font-medium text-white/90 transition hover:bg-white/10"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-lg font-medium text-white/90 transition active:bg-white/20 sm:h-9 sm:w-9"
             onClick={(e) => {
               e.stopPropagation();
               zoomAtScreenCenter(1.15);
@@ -444,7 +445,7 @@ export function FloorPlanViewer({
           <button
             type="button"
             aria-label="Zoom out"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-lg font-medium text-white/90 transition hover:bg-white/10"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-lg font-medium text-white/90 transition active:bg-white/20 sm:h-9 sm:w-9"
             onClick={(e) => {
               e.stopPropagation();
               zoomAtScreenCenter(1 / 1.15);
@@ -455,7 +456,7 @@ export function FloorPlanViewer({
           <button
             type="button"
             aria-label="Reset zoom"
-            className="border-t border-white/10 px-1 pt-1 text-[10px] font-medium text-white/55 transition hover:text-white/85"
+            className="border-t border-white/10 px-1 py-1.5 text-[11px] font-medium text-white/55 transition active:text-white/85 sm:pt-1 sm:text-[10px]"
             onClick={(e) => {
               e.stopPropagation();
               resetView();
@@ -468,7 +469,7 @@ export function FloorPlanViewer({
 
       {!editMode && hoveredRoom && tooltipPos && (
         <div
-          className="pointer-events-none fixed z-50 flex items-center gap-2 rounded-lg border border-white/15 bg-black/80 px-3 py-1.5 shadow-xl backdrop-blur-md"
+          className="pointer-events-none fixed z-50 hidden items-center gap-2 rounded-lg border border-white/15 bg-black/80 px-3 py-1.5 shadow-xl backdrop-blur-md sm:flex"
           style={{
             left: tooltipPos.x + 14,
             top: tooltipPos.y - 10,

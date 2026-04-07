@@ -328,15 +328,17 @@ export function BuildingShell({
     }
   };
 
+  const [mobileTab, setMobileTab] = useState<"plan" | "rooms" | "gallery">("plan");
+
   return (
-    <div className="flex min-h-screen flex-col bg-app-bg text-gray-200">
+    <div className="flex min-h-[100dvh] flex-col bg-app-bg text-gray-200">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-app-header">
-        <div className="relative mx-auto flex h-14 max-w-[1600px] items-center justify-between px-5 sm:h-16 sm:px-7">
-          <div className="flex w-28 shrink-0 items-center gap-2 sm:w-32">
+        <div className="relative mx-auto flex h-12 max-w-[1600px] items-center justify-between px-3 sm:h-16 sm:px-7">
+          <div className="flex w-20 shrink-0 items-center gap-2 sm:w-32">
             <button
               type="button"
               onClick={() => setPresentMode(true)}
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-app-panel px-3 text-xs font-medium text-gray-300 transition hover:border-white/20 hover:bg-app-raised hover:text-white"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/10 bg-app-panel px-2.5 text-xs font-medium text-gray-300 transition active:scale-95 sm:gap-2 sm:px-3"
               title="Present floor plan fullscreen"
             >
               <svg
@@ -356,16 +358,16 @@ export function BuildingShell({
             </button>
           </div>
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <h1 className="pointer-events-auto text-base font-semibold tracking-tight text-white sm:text-lg">
+            <h1 className="pointer-events-auto text-sm font-semibold tracking-tight text-white sm:text-lg">
               Mt Barker Building
             </h1>
           </div>
-          <div className="flex w-28 shrink-0 justify-end sm:w-32">
+          <div className="flex w-20 shrink-0 justify-end sm:w-32">
             {!showEditChrome && (
               <button
                 type="button"
                 onClick={unlockLayoutTools}
-                className="rounded-xl border border-white/15 bg-app-panel px-3 py-2 text-xs font-medium text-gray-200 shadow-sm transition hover:border-white/25 hover:bg-app-raised"
+                className="rounded-lg border border-white/15 bg-app-panel px-2.5 py-1.5 text-[11px] font-medium text-gray-200 shadow-sm transition active:scale-95 sm:rounded-xl sm:px-3 sm:py-2 sm:text-xs"
               >
                 Layout tools
               </button>
@@ -375,7 +377,7 @@ export function BuildingShell({
       </header>
 
       {showEditChrome && (
-        <div className="mx-auto w-full max-w-[1600px] px-4 pt-6 sm:px-6">
+        <div className="mx-auto w-full max-w-[1600px] px-3 pt-4 sm:px-6 sm:pt-6">
           <FloorPlanEditor
             editMode={editMode}
             selectedRoom={selectedRoom}
@@ -419,10 +421,28 @@ export function BuildingShell({
         </div>
       )}
 
-      {/* Design-board layout: floor plan is the canvas, panels float on top */}
+      {/* ─── MOBILE TAB BAR (below lg) ─── */}
+      <div className="sticky top-12 z-30 flex border-b border-white/10 bg-app-header/95 backdrop-blur-md lg:hidden">
+        {(["plan", "rooms", "gallery"] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setMobileTab(tab)}
+            className={`flex-1 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wider transition ${
+              mobileTab === tab
+                ? "border-b-2 border-orange-500 text-orange-300"
+                : "text-gray-500 active:text-gray-300"
+            }`}
+          >
+            {tab === "plan" ? "Floor Plan" : tab === "rooms" ? "Rooms" : "Gallery"}
+          </button>
+        ))}
+      </div>
+
+      {/* ─── MAIN CONTENT ─── */}
       <main className="canvas-texture relative flex-1">
-        {/* Floor plan — fills entire main area as the canvas */}
-        <div className="absolute inset-0">
+        {/* ─── DESKTOP: floating panels over full canvas ─── */}
+        <div className="absolute inset-0 hidden lg:block">
           <FloorPlanViewer
             floorplan={floorplan}
             rooms={displayRooms}
@@ -433,23 +453,78 @@ export function BuildingShell({
             baseLayerOpacity={baseLayerOpacity}
           />
         </div>
-
-        {/* Floating panels on top */}
-        <div className="pointer-events-none relative z-10 flex min-h-[calc(100vh-4rem)] flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-stretch">
-          {/* Left: room sidebar */}
-          <div className="pointer-events-auto w-full shrink-0 lg:w-[250px] xl:w-[270px]">
+        <div className="pointer-events-none relative z-10 hidden min-h-[calc(100dvh-4rem)] flex-col gap-4 p-5 lg:flex lg:flex-row lg:items-stretch">
+          <div className="pointer-events-auto w-[250px] shrink-0 xl:w-[270px]">
             <RoomSidebar
               rooms={displayRooms}
               selectedId={selectedId}
               onSelect={setSelectedId}
             />
           </div>
+          <div className="flex-1" />
+          <div className="pointer-events-auto w-[340px] shrink-0 xl:w-[380px]">
+            <RoomDetailPanel
+              room={selectedRoom}
+              editMode={editMode}
+              onRoomsRefresh={refreshData}
+              canPersist={writesEnabled}
+              onDraftRoomPatch={editMode ? patchDraftRoom : undefined}
+            />
+          </div>
+        </div>
 
-          {/* Middle: spacer — lets the floor plan show through */}
-          <div className="hidden flex-1 lg:block" />
+        {/* ─── MOBILE: tabbed panels ─── */}
+        <div className="flex flex-col lg:hidden">
+          {/* Floor plan tab */}
+          <div className={mobileTab === "plan" ? "block" : "hidden"}>
+            <div className="relative h-[55dvh] min-h-[260px]">
+              <FloorPlanViewer
+                floorplan={floorplan}
+                rooms={displayRooms}
+                selectedId={selectedId}
+                onSelectRoom={(id) => {
+                  setSelectedId(id);
+                  if (id) setMobileTab("gallery");
+                }}
+                editMode={editMode}
+                onRoomsDirty={editMode ? setDraftRooms : undefined}
+                baseLayerOpacity={baseLayerOpacity}
+              />
+            </div>
+            {selectedRoom && (
+              <div className="border-t border-white/10 bg-app-header/80 px-4 py-3 backdrop-blur-md">
+                <button
+                  type="button"
+                  onClick={() => setMobileTab("gallery")}
+                  className="flex w-full items-center justify-between rounded-xl border border-orange-500/30 bg-orange-500/[0.08] px-4 py-3 active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: selectedRoom.color }}
+                    />
+                    <span className="text-sm font-semibold text-white">{selectedRoom.name}</span>
+                  </div>
+                  <span className="text-xs text-orange-300">View gallery →</span>
+                </button>
+              </div>
+            )}
+          </div>
 
-          {/* Right: gallery panel */}
-          <div className="pointer-events-auto w-full shrink-0 lg:w-[340px] xl:w-[380px]">
+          {/* Rooms tab */}
+          <div className={mobileTab === "rooms" ? "block p-3" : "hidden"}>
+            <RoomSidebar
+              rooms={displayRooms}
+              selectedId={selectedId}
+              onSelect={(id) => {
+                setSelectedId(id);
+                setMobileTab("gallery");
+              }}
+            />
+          </div>
+
+          {/* Gallery tab */}
+          <div className={mobileTab === "gallery" ? "block p-3" : "hidden"}>
             <RoomDetailPanel
               room={selectedRoom}
               editMode={editMode}
@@ -461,8 +536,8 @@ export function BuildingShell({
         </div>
       </main>
 
-      <footer className="mt-auto border-t border-white/10 bg-app-header py-3.5 sm:py-4">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-center gap-2 px-5 text-center text-[11px] text-gray-500">
+      <footer className="mt-auto border-t border-white/10 bg-app-header" style={{ paddingBottom: "max(0.875rem, var(--safe-bottom))" }}>
+        <div className="mx-auto flex max-w-[1600px] items-center justify-center gap-2 px-5 pt-3 text-center text-[11px] text-gray-500 sm:pt-4">
           <span>© {new Date().getFullYear()} Mt Barker Building</span>
         </div>
       </footer>

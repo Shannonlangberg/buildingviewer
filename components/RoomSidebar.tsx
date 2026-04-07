@@ -27,13 +27,13 @@ type Props = {
 export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
   return (
     <aside className="flex h-full flex-col rounded-2xl border border-white/[0.12] bg-black/50 shadow-2xl shadow-black/50 backdrop-blur-xl backdrop-saturate-150">
-      <h2 className="shrink-0 px-4 pb-1 pt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-500">
+      <h2 className="shrink-0 px-4 pb-1 pt-3 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-500 sm:pt-4">
         Rooms
       </h2>
-      <p className="shrink-0 px-4 pb-3 text-[11px] text-gray-600">
+      <p className="shrink-0 px-4 pb-2 text-[11px] text-gray-600 sm:pb-3">
         Select a room to view its gallery.
       </p>
-      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2.5 pb-3">
+      <nav className="-webkit-overflow-scrolling-touch flex flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain px-2.5 pb-3">
         {rooms.map((room) => {
           const active = room.id === selectedId;
           const category = CATEGORY[room.slug] ?? "Zone";
@@ -43,10 +43,10 @@ export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
               type="button"
               onClick={() => onSelect(room.id)}
               className={cn(
-                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition duration-150",
+                "flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition duration-150 active:scale-[0.98] sm:py-2.5",
                 active
-                  ? "border border-orange-500/30 bg-orange-500/[0.12] shadow-sm shadow-black/30 ring-1 ring-orange-500/20"
-                  : "border border-transparent hover:bg-white/[0.05]"
+                  ? "border-orange-500/30 bg-orange-500/[0.14] shadow-md shadow-orange-500/[0.06] ring-1 ring-orange-500/20"
+                  : "border-white/[0.08] bg-white/[0.03] hover:border-white/[0.14] hover:bg-white/[0.07]"
               )}
             >
               <span

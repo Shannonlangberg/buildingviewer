@@ -155,15 +155,15 @@ export function PresentationView({
       <button
         type="button"
         onClick={onClose}
-        className="absolute left-4 top-4 z-50 flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-4 py-2 text-sm font-medium text-white/90 backdrop-blur-md transition hover:bg-white/15"
+        className="absolute left-3 top-3 z-50 flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.08] px-3 py-2 text-sm font-medium text-white/90 backdrop-blur-md transition active:scale-95 sm:left-4 sm:top-4 sm:gap-2 sm:px-4"
       >
         <span className="text-lg leading-none">←</span>
-        Exit
+        <span className="hidden sm:inline">Exit</span>
       </button>
 
       {/* Title */}
-      <div className="pointer-events-none absolute left-1/2 top-4 z-50 -translate-x-1/2">
-        <h2 className="text-sm font-semibold tracking-tight text-white/80">
+      <div className="pointer-events-none absolute left-1/2 top-3 z-50 -translate-x-1/2 sm:top-4">
+        <h2 className="text-xs font-semibold tracking-tight text-white/80 sm:text-sm">
           Mt Barker Building
         </h2>
       </div>
@@ -171,7 +171,7 @@ export function PresentationView({
       {/* Floor plan area */}
       <div
         className={cn(
-          "flex flex-1 items-center justify-center p-6 transition-all duration-500",
+          "flex flex-1 items-center justify-center p-3 transition-all duration-500 sm:p-6",
           selectedId ? "sm:pr-0" : ""
         )}
       >
@@ -179,11 +179,11 @@ export function PresentationView({
           className={cn(
             "relative w-full transition-all duration-500 ease-out",
             selectedId
-              ? "max-w-[min(55vw,720px)]"
-              : "max-w-[min(85vw,1100px)]"
+              ? "max-w-full sm:max-w-[min(55vw,720px)]"
+              : "max-w-full sm:max-w-[min(85vw,1100px)]"
           )}
         >
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-black/40 shadow-2xl shadow-black/50 ring-1 ring-white/[0.06]">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-white/[0.12] bg-black/40 shadow-2xl shadow-black/50 ring-1 ring-white/[0.06] sm:rounded-2xl">
             <div className="relative h-full w-full">
               <FloorPlanCanvas
                 floorplan={floorplan}
@@ -249,14 +249,14 @@ export function PresentationView({
           </div>
 
           {/* Room name chips at bottom of plan */}
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <div className="mt-3 flex gap-2 overflow-x-auto px-1 pb-1 sm:mt-4 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0">
             {rooms.map((room) => (
               <button
                 key={room.id}
                 type="button"
                 onClick={() => handleSelectRoom(room.id)}
                 className={cn(
-                  "rounded-full px-3 py-1.5 text-[11px] font-medium transition duration-200",
+                  "shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-[11px] font-medium transition duration-200 active:scale-95 sm:py-1.5",
                   room.id === selectedId
                     ? "border border-orange-500/40 bg-orange-500/15 text-orange-100 shadow-md shadow-orange-500/10"
                     : "border border-white/10 bg-white/[0.06] text-white/70 hover:bg-white/10 hover:text-white"
@@ -273,14 +273,15 @@ export function PresentationView({
         </div>
       </div>
 
-      {/* Gallery slide-out panel */}
+      {/* Gallery slide-out panel — bottom sheet on mobile, side panel on desktop */}
       <div
         className={cn(
-          "flex h-full w-[420px] max-w-[40vw] shrink-0 flex-col overflow-hidden border-l border-white/10 bg-white/[0.06] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-500 ease-out",
+          "fixed inset-x-0 bottom-0 z-[201] flex max-h-[70dvh] flex-col overflow-hidden rounded-t-2xl border-t border-white/10 bg-black/90 backdrop-blur-2xl backdrop-saturate-150 transition-all duration-500 ease-out sm:static sm:inset-auto sm:z-auto sm:max-h-full sm:w-[420px] sm:max-w-[40vw] sm:rounded-none sm:border-l sm:border-t-0 sm:bg-white/[0.06]",
           selectedId
-            ? "translate-x-0 opacity-100"
-            : "translate-x-full opacity-0 pointer-events-none"
+            ? "translate-y-0 opacity-100 sm:translate-x-0"
+            : "translate-y-full opacity-0 pointer-events-none sm:translate-y-0 sm:translate-x-full"
         )}
+        style={{ paddingBottom: selectedId ? "max(0px, var(--safe-bottom))" : undefined }}
       >
         {selectedRoom && (
           <>

@@ -13,6 +13,18 @@ export const metadata: Metadata = {
   title: "Mt Barker Building",
   description:
     "Interactive floor plan and room galleries for Mt Barker campus.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: "cover",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Mt Barker",
+  },
+  themeColor: "#0f1117",
 };
 
 export default function RootLayout({
@@ -23,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${inter.variable}`}>
       <body
-        className={`${inter.className} min-h-screen bg-app-bg font-sans text-gray-200 antialiased`}
+        className={`${inter.className} min-h-[100dvh] bg-app-bg font-sans text-gray-200 antialiased`}
       >
         {children}
       </body>

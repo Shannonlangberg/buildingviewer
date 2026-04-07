@@ -22,6 +22,8 @@ type Props = {
   viewport?: FloorplanViewport;
   /** Click / tap on blueprint only (not on a room zone). */
   onBackdropClick?: () => void;
+  /** In edit mode we need touch-none to prevent scroll during drag. */
+  editMode?: boolean;
 };
 
 /**
@@ -36,6 +38,7 @@ export function FloorPlanCanvas({
   baseLayerOpacity = DEFAULT_BASE_LAYER_OPACITY,
   viewport = DEFAULT_FLOORPLAN_VIEWPORT,
   onBackdropClick,
+  editMode = false,
 }: Props) {
   const opacity = Math.min(1, Math.max(0, baseLayerOpacity));
   const imagePath = floorplan?.image_path?.trim();
@@ -54,7 +57,7 @@ export function FloorPlanCanvas({
     <svg
       ref={svgRef as unknown as Ref<SVGSVGElement>}
       viewBox="0 0 100 100"
-      className="absolute inset-0 h-full w-full touch-none select-none font-sans [text-rendering:geometricPrecision]"
+      className={`absolute inset-0 h-full w-full select-none font-sans [text-rendering:geometricPrecision] ${editMode ? "touch-none" : "touch-manipulation"}`}
       style={{
         fontFamily:
           "var(--font-body, ui-sans-serif), system-ui, -apple-system, sans-serif",
