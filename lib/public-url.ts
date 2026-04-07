@@ -5,6 +5,34 @@ export function publicStorageUrl(storagePath: string): string | null {
   return `${base}/storage/v1/object/public/${bucket}/${storagePath}`;
 }
 
+/**
+ * Extract storage object key from a Supabase public object URL, or null if not a match.
+ */
+export function storageObjectPathFromPublicUrl(
+  absoluteUrl: string,
+  bucket: string
+): string | null {
+  if (!absoluteUrl || !bucket) return null;
+  try {
+    const u = new URL(absoluteUrl);
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const idx = u.pathname.indexOf(marker);
+    if (idx === -1) return null;
+    return decodeURIComponent(u.pathname.slice(idx + marker.length));
+  } catch {
+    return null;
+  }
+}
+
+/** True when active floorplan points at an uploaded file under storage `floorplans/`. */
+export function floorplanHasRemovableBaseUpload(
+  imagePath: string | null | undefined,
+  bucket: string
+): boolean {
+  const key = storageObjectPathFromPublicUrl(imagePath?.trim() ?? "", bucket);
+  return Boolean(key?.startsWith("floorplans/"));
+}
+
 export function guessMimeFromPath(path: string): string {
   const lower = path.toLowerCase();
   if (lower.endsWith(".png")) return "image/png";

@@ -96,6 +96,7 @@ export function RoomDetailPanel({
   const [heroId, setHeroId] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -147,6 +148,25 @@ export function RoomDetailPanel({
     if (idx >= 0) {
       setLightboxIndex(idx);
       setLightboxOpen(true);
+    }
+  };
+
+  const deleteRoomImage = async (imageId: string) => {
+    if (!canPersist) return;
+    if (
+      !confirm(
+        "Remove this file from the gallery? It will be deleted from storage."
+      )
+    ) {
+      return;
+    }
+    setDeletingImageId(imageId);
+    try {
+      const res = await fetch(`/api/images/${imageId}`, { method: "DELETE" });
+      if (!res.ok) return;
+      await load();
+    } finally {
+      setDeletingImageId(null);
     }
   };
 
@@ -307,41 +327,58 @@ export function RoomDetailPanel({
                   const pdf =
                     guessMimeFromPath(img.storage_path) === "application/pdf";
                   const active = img.id === heroId;
+                  const deleting = deletingImageId === img.id;
                   return (
                     <li key={img.id}>
                       <SortableThumb id={img.id}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setHeroId(img.id);
-                            if (raster) openLightboxFor(img);
-                          }}
-                          className={cn(
-                            "relative block aspect-square w-full overflow-hidden rounded-lg border border-white/10 bg-black/30",
-                            active
-                              ? "border-sky-400/60 ring-1 ring-sky-400/30"
-                              : "border-white/10 hover:border-white/20"
-                          )}
-                        >
-                          {raster && url && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={url}
-                              alt=""
-                              className="absolute inset-0 h-full w-full object-cover"
-                            />
-                          )}
-                          {pdf && (
-                            <span className="flex h-full items-center justify-center text-[10px] font-medium text-slate-300">
-                              PDF
-                            </span>
-                          )}
-                          {!raster && !pdf && (
-                            <span className="flex h-full items-center justify-center text-[10px] text-slate-400">
-                              FILE
-                            </span>
-                          )}
-                        </button>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHeroId(img.id);
+                              if (raster) openLightboxFor(img);
+                            }}
+                            className={cn(
+                              "relative block aspect-square w-full overflow-hidden rounded-lg border border-white/10 bg-black/30",
+                              active
+                                ? "border-sky-400/60 ring-1 ring-sky-400/30"
+                                : "border-white/10 hover:border-white/20"
+                            )}
+                          >
+                            {raster && url && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={url}
+                                alt=""
+                                className="absolute inset-0 h-full w-full object-cover"
+                              />
+                            )}
+                            {pdf && (
+                              <span className="flex h-full items-center justify-center text-[10px] font-medium text-slate-300">
+                                PDF
+                              </span>
+                            )}
+                            {!raster && !pdf && (
+                              <span className="flex h-full items-center justify-center text-[10px] text-slate-400">
+                                FILE
+                              </span>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            title="Remove from gallery"
+                            disabled={deleting}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              void deleteRoomImage(img.id);
+                            }}
+                            className="absolute right-1 top-1 z-[2] rounded bg-rose-950/90 px-1.5 py-0.5 text-[9px] font-semibold text-rose-100 shadow-md ring-1 ring-rose-500/30 hover:bg-rose-900 disabled:opacity-50"
+                          >
+                            {deleting ? "…" : "✕"}
+                          </button>
+                        </div>
                       </SortableThumb>
                     </li>
                   );
@@ -358,7 +395,7 @@ export function RoomDetailPanel({
                 guessMimeFromPath(img.storage_path) === "application/pdf";
               const active = img.id === heroId;
               return (
-                <li key={img.id}>
+                <li key={img.id} className="relative">
                   <button
                     type="button"
                     onClick={() => {

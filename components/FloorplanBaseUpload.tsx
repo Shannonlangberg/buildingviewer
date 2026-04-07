@@ -5,10 +5,19 @@ import { useCallback, useState } from "react";
 type Props = {
   disabled: boolean;
   onUploaded: () => void;
+  /** Show when DB points at a Supabase `floorplans/…` upload (not bundled SVG). */
+  canRemoveUploadedBase: boolean;
+  onRemoveUploadedBase: () => void;
 };
 
-export function FloorplanBaseUpload({ disabled, onUploaded }: Props) {
+export function FloorplanBaseUpload({
+  disabled,
+  onUploaded,
+  canRemoveUploadedBase,
+  onRemoveUploadedBase,
+}: Props) {
   const [busy, setBusy] = useState(false);
+  const [removeBusy, setRemoveBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const onChange = useCallback(
@@ -37,6 +46,34 @@ export function FloorplanBaseUpload({ disabled, onUploaded }: Props) {
     [disabled, onUploaded]
   );
 
+  const onRemove = useCallback(async () => {
+    if (disabled || removeBusy || !canRemoveUploadedBase) return;
+    if (
+      !confirm(
+        "Remove the uploaded base floor plan? The bundled default SVG will show under zones again."
+      )
+    ) {
+      return;
+    }
+    setErr(null);
+    setRemoveBusy(true);
+    try {
+      const res = await fetch("/api/floorplans/base", { method: "DELETE" });
+      const j = (await res.json()) as { error?: string };
+      if (!res.ok) throw new Error(j.error ?? "Remove failed");
+      onRemoveUploadedBase();
+    } catch (er) {
+      setErr(er instanceof Error ? er.message : "Failed");
+    } finally {
+      setRemoveBusy(false);
+    }
+  }, [
+    disabled,
+    removeBusy,
+    canRemoveUploadedBase,
+    onRemoveUploadedBase,
+  ]);
+
   return (
     <div className="mt-2 flex flex-col gap-2 border-t border-white/10 pt-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -61,6 +98,16 @@ export function FloorplanBaseUpload({ disabled, onUploaded }: Props) {
             onChange={onChange}
           />
         </label>
+        {canRemoveUploadedBase && (
+          <button
+            type="button"
+            disabled={disabled || removeBusy || busy}
+            onClick={() => void onRemove()}
+            className="rounded-lg border border-rose-500/35 bg-rose-500/10 px-3 py-1.5 text-[11px] font-medium text-rose-100 hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {removeBusy ? "Removing…" : "Remove uploaded base"}
+          </button>
+        )}
         <p className="max-w-xl text-[10px] leading-snug text-slate-500">
           Sits <span className="text-slate-400">under</span> coloured room zones.
           Match roughly the same footprint as the 0–100 overlay grid. JPG, PNG,

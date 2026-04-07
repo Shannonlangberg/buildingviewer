@@ -1,7 +1,8 @@
 "use client";
 
 import type { CapabilitiesPayload } from "@/lib/server-capabilities";
-import type { Room } from "@/lib/types";
+import { floorplanHasRemovableBaseUpload } from "@/lib/public-url";
+import type { Floorplan, Room } from "@/lib/types";
 import { ROOM_STATUS_LABELS } from "@/lib/types";
 import { FloorplanBaseUpload } from "./FloorplanBaseUpload";
 
@@ -15,6 +16,7 @@ type Props = {
   onToggleEdit: () => void;
   canPersist: boolean;
   capabilities: CapabilitiesPayload;
+  floorplan: Floorplan | null;
   onFloorplanUploaded: () => void;
   onAddRect: () => void;
   onAddPolygon: () => void;
@@ -264,6 +266,7 @@ export function FloorPlanEditor({
   onToggleEdit,
   canPersist,
   capabilities,
+  floorplan,
   onFloorplanUploaded,
   onAddRect,
   onAddPolygon,
@@ -278,6 +281,9 @@ export function FloorPlanEditor({
   const r = selectedRoom
     ? draftRooms.find((x) => x.id === selectedRoom.id) ?? selectedRoom
     : null;
+
+  const storageBucket =
+    process.env.NEXT_PUBLIC_STORAGE_BUCKET ?? "room-images";
 
   return (
     <div
@@ -376,6 +382,11 @@ export function FloorPlanEditor({
         <FloorplanBaseUpload
           disabled={!canPersist}
           onUploaded={onFloorplanUploaded}
+          canRemoveUploadedBase={floorplanHasRemovableBaseUpload(
+            floorplan?.image_path,
+            storageBucket
+          )}
+          onRemoveUploadedBase={onFloorplanUploaded}
         />
       )}
       {editMode && r && (

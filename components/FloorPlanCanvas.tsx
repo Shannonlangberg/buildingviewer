@@ -3,6 +3,9 @@
 import type { ReactNode, Ref, RefObject } from "react";
 import type { Floorplan } from "@/lib/types";
 
+/** How visible the blueprint under coloured zones is (0–1). Higher = easier to see walls/lines. */
+const BASE_LAYER_OPACITY = 0.82;
+
 type Props = {
   floorplan: Floorplan | null;
   /** Used when `floorplan` has no usable `image_path`. */
@@ -51,7 +54,7 @@ export function FloorPlanCanvas({
       {useInlineSvg ? (
         <g
           dangerouslySetInnerHTML={{ __html: floorplan!.svg_content! }}
-          className="opacity-[0.55]"
+          style={{ opacity: BASE_LAYER_OPACITY }}
         />
       ) : (
         <image
@@ -59,7 +62,7 @@ export function FloorPlanCanvas({
           width={100}
           height={100}
           preserveAspectRatio="xMidYMid meet"
-          className="opacity-[0.55]"
+          style={{ opacity: BASE_LAYER_OPACITY }}
         />
       )}
       {children}

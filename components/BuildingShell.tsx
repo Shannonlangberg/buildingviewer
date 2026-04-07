@@ -321,6 +321,7 @@ export function BuildingShell({
           onToggleEdit={toggleEdit}
           canPersist={writesEnabled}
           capabilities={capabilities}
+          floorplan={floorplan}
           onFloorplanUploaded={() => void refreshData()}
           onAddRect={() => void addShape("rect")}
           onAddPolygon={() => void addShape("polygon")}
