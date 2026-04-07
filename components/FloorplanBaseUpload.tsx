@@ -33,9 +33,13 @@ export function FloorplanBaseUpload({
         const res = await fetch("/api/floorplans/upload", {
           method: "POST",
           body: fd,
+          cache: "no-store",
         });
-        const j = (await res.json()) as { error?: string };
-        if (!res.ok) throw new Error(j.error ?? "Upload failed");
+        const j = (await res.json()) as { error?: string; detail?: string };
+        if (!res.ok) {
+          const parts = [j.error, j.detail].filter(Boolean);
+          throw new Error(parts.length ? parts.join(" — ") : "Upload failed");
+        }
         onUploaded();
       } catch (er) {
         setErr(er instanceof Error ? er.message : "Failed");

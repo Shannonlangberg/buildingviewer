@@ -77,6 +77,8 @@ export function guessMimeFromPath(path: string): string {
   const lower = path.toLowerCase();
   if (lower.endsWith(".png")) return "image/png";
   if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  if (lower.endsWith(".webp")) return "image/webp";
+  if (lower.endsWith(".svg") || lower.endsWith(".svgz")) return "image/svg+xml";
   if (lower.endsWith(".heic") || lower.endsWith(".heif")) return "image/heic";
   if (lower.endsWith(".pdf")) return "application/pdf";
   return "application/octet-stream";
@@ -84,5 +86,9 @@ export function guessMimeFromPath(path: string): string {
 
 export function isRasterPreview(path: string) {
   const m = guessMimeFromPath(path);
-  return m === "image/png" || m === "image/jpeg";
+  return (
+    m === "image/png" ||
+    m === "image/jpeg" ||
+    m === "image/webp"
+  );
 }

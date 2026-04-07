@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guessMimeFromPath } from "@/lib/public-url";
 import { createServiceSupabase } from "@/lib/supabase";
 
 const BUCKET = process.env.NEXT_PUBLIC_STORAGE_BUCKET ?? "room-images";
@@ -20,6 +21,25 @@ function extFromMime(mime: string, filename: string) {
   return m ? m[1].toLowerCase() : "png";
 }
 
+/** Browsers often send empty type or application/octet-stream; infer from filename. */
+function effectiveFloorplanMime(file: File): string {
+  if (file.type && file.type !== "application/octet-stream") {
+    return file.type;
+  }
+  return guessMimeFromPath(file.name);
+}
+
+function errorPayload(e: unknown, fallback: string) {
+  const msg =
+    e && typeof e === "object" && "message" in e
+      ? String((e as { message: unknown }).message)
+      : typeof e === "string"
+        ? e
+        : fallback;
+  const detail = msg.slice(0, 400);
+  return { error: fallback, detail };
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = createServiceSupabase();
@@ -31,10 +51,13 @@ export async function POST(request: Request) {
     if (file.size > MAX_BYTES) {
       return NextResponse.json({ error: "Max 20MB" }, { status: 400 });
     }
-    const mime = file.type || "application/octet-stream";
+    const mime = effectiveFloorplanMime(file);
     if (!ALLOWED.has(mime)) {
       return NextResponse.json(
-        { error: "Use JPG, PNG, WebP, or SVG" },
+        {
+          error: "Use JPG, PNG, WebP, or SVG",
+          detail: `Detected type: ${mime || "unknown"}. If the file is correct, rename it with a proper extension (e.g. .png).`,
+        },
         { status: 400 }
       );
     }
@@ -49,7 +72,10 @@ export async function POST(request: Request) {
 
     if (fpErr || !fp?.id) {
       return NextResponse.json(
-        { error: "No active floorplan row. Run supabase/seed.sql." },
+        {
+          error: "No active floorplan row. Run supabase/seed.sql.",
+          detail: fpErr?.message,
+        },
         { status: 400 }
       );
     }
@@ -60,10 +86,19 @@ export async function POST(request: Request) {
 
     const { error: upErr } = await supabase.storage
       .from(BUCKET)
-      .upload(path, buffer, { contentType: mime, upsert: false });
+      .upload(path, buffer, { contentType: mime, upsert: true });
     if (upErr) throw upErr;
 
-    const base = process.env.NEXT_PUBLIC_SUPABASE_URL!.replace(/\/$/, "");
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+    if (!base) {
+      return NextResponse.json(
+        {
+          error: "Server misconfiguration",
+          detail: "NEXT_PUBLIC_SUPABASE_URL is not set.",
+        },
+        { status: 500 }
+      );
+    }
     const publicUrl = `${base}/storage/v1/object/public/${BUCKET}/${path}`;
 
     const { data: updated, error: updErr } = await supabase
@@ -81,12 +116,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ floorplan: updated });
   } catch (e) {
     console.error(e);
-    return NextResponse.json(
-      {
-        error:
-          "Upload failed. Check SUPABASE_SERVICE_ROLE_KEY, bucket, and seed data.",
-      },
-      { status: 503 }
+    const payload = errorPayload(
+      e,
+      "Upload failed. Check SUPABASE_SERVICE_ROLE_KEY, bucket name, and seed data."
     );
+    return NextResponse.json(payload, { status: 503 });
   }
 }
