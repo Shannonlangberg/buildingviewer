@@ -85,7 +85,7 @@ export function FloorPlanViewer({
   );
 
   const anyFocused = !editMode && (hoveredId != null || selectedId != null);
-  const baseDimOpacity = anyFocused ? 0.55 : undefined;
+  const baseDimOpacity = anyFocused ? 0.68 : undefined;
 
   const defaultBase = "/floorplans/mt-barker-base.svg";
   const selectedRoom =

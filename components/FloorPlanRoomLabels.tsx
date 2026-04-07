@@ -39,7 +39,7 @@ export function FloorPlanRoomLabels({
         const fs = isFocused ? baseFontSize * 1.08 : baseFontSize;
 
         let labelOpacity = 1;
-        if (isDimmed) labelOpacity = 0.25;
+        if (isDimmed) labelOpacity = 0.5;
 
         const fill = effectiveLabelFill(room);
 

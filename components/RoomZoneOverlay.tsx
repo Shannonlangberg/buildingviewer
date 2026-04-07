@@ -43,7 +43,7 @@ export function RoomZoneOverlay({
 
         const baseOpacity = editMode ? 0.48 : 0.55;
         let opacity = baseOpacity;
-        if (isDimmed) opacity = 0.15;
+        if (isDimmed) opacity = 0.32;
         else if (isSel || dragging) opacity = 0.88;
         else if (isHover) opacity = 0.8;
 
