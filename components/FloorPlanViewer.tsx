@@ -14,7 +14,7 @@ import {
 } from "@/lib/floorplan-viewport";
 import { removePolygonVertex } from "@/lib/polygon-edit";
 import type { Floorplan, RectResizeHandleId, Room } from "@/lib/types";
-import { cn, parsePolygonPoints, serializePolygonPoints } from "@/lib/utils";
+import { parsePolygonPoints, serializePolygonPoints } from "@/lib/utils";
 import { FloorPlanCanvas } from "./FloorPlanCanvas";
 import { FloorPlanRoomLabels } from "./FloorPlanRoomLabels";
 import { PolygonEdgeInsertHandles } from "./PolygonEdgeInsertHandles";
@@ -43,7 +43,6 @@ export function FloorPlanViewer({
   baseLayerOpacity,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const [viewport, setViewport] = useState<FloorplanViewport>(
     DEFAULT_FLOORPLAN_VIEWPORT
   );
@@ -51,12 +50,6 @@ export function FloorPlanViewer({
   const [drag, setDrag] = useState<LayoutPointerDragState | null>(null);
   const [draggingRoomId, setDraggingRoomId] = useState<string | null>(null);
   const movedRef = useRef(false);
-  const suppressBackdropClickRef = useRef(false);
-  const panSessionRef = useRef<null | {
-    pointerId: number;
-    startRoot: { x: number; y: number };
-    startPan: { x: number; y: number };
-  }>(null);
 
   const effectiveViewport = editMode
     ? DEFAULT_FLOORPLAN_VIEWPORT
@@ -64,21 +57,6 @@ export function FloorPlanViewer({
 
   useEffect(() => {
     if (editMode) setViewport(DEFAULT_FLOORPLAN_VIEWPORT);
-  }, [editMode]);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    const svg = svgRef.current;
-    if (!el || !svg) return;
-    const onWheel = (e: WheelEvent) => {
-      if (editMode) return;
-      e.preventDefault();
-      const factor = e.deltaY > 0 ? 0.9 : 1.11;
-      const root = svgClientToViewBox(svg, e.clientX, e.clientY);
-      setViewport((v) => nextViewportForWheelZoom(v, root, factor));
-    };
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
   }, [editMode]);
 
   const defaultBase = "/floorplans/mt-barker-base.svg";
@@ -297,49 +275,6 @@ export function FloorPlanViewer({
     onSelectRoom(id);
   };
 
-  const onPlanPointerDownCapture = (e: React.PointerEvent) => {
-    if (editMode || e.button !== 0) return;
-    const t = e.target;
-    if (!(t instanceof Element)) return;
-    if (t.closest("[data-room-zone]")) return;
-    if (!t.closest("svg")) return;
-    const svg = svgRef.current;
-    if (!svg) return;
-    panSessionRef.current = {
-      pointerId: e.pointerId,
-      startRoot: svgClientToViewBox(svg, e.clientX, e.clientY),
-      startPan: { x: viewport.panX, y: viewport.panY },
-    };
-
-    const onMove = (ev: PointerEvent) => {
-      const s = panSessionRef.current;
-      if (!s || ev.pointerId !== s.pointerId || !svgRef.current) return;
-      const svgEl = svgRef.current;
-      const r = svgClientToViewBox(svgEl, ev.clientX, ev.clientY);
-      const dx = r.x - s.startRoot.x;
-      const dy = r.y - s.startRoot.y;
-      if (Math.hypot(dx, dy) > 0.45) suppressBackdropClickRef.current = true;
-      setViewport((prev) => ({
-        ...prev,
-        panX: s.startPan.x + dx,
-        panY: s.startPan.y + dy,
-      }));
-    };
-
-    const onUp = (ev: PointerEvent) => {
-      const s = panSessionRef.current;
-      if (!s || ev.pointerId !== s.pointerId) return;
-      panSessionRef.current = null;
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-    };
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-  };
-
   const zoomAtScreenCenter = (factor: number) => {
     const svg = svgRef.current;
     if (!svg) return;
@@ -355,28 +290,12 @@ export function FloorPlanViewer({
   const resetView = () => setViewport(DEFAULT_FLOORPLAN_VIEWPORT);
 
   const backdropClick = () => {
-    if (suppressBackdropClickRef.current) {
-      suppressBackdropClickRef.current = false;
-      return;
-    }
     onSelectRoom(null);
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        "relative h-full w-full overflow-hidden",
-        !editMode && "touch-none"
-      )}
-      onPointerDownCapture={onPlanPointerDownCapture}
-    >
-      <div
-        className={cn(
-          "relative h-full w-full",
-          !editMode && "cursor-grab active:cursor-grabbing"
-        )}
-      >
+    <div className="relative h-full w-full overflow-hidden">
+      <div className="relative h-full w-full">
         <FloorPlanCanvas
           floorplan={floorplan}
           fallbackImageSrc={defaultBase}
@@ -459,11 +378,8 @@ export function FloorPlanViewer({
 
           {/* Arrow */}
           <svg viewBox="0 0 40 40" className="relative h-9 w-9 sm:h-10 sm:w-10" aria-hidden>
-            {/* North half — white/bright */}
             <path d="M20 4 L23 20 L20 18 L17 20 Z" fill="rgba(255,255,255,0.92)" />
-            {/* South half — dim */}
             <path d="M20 36 L17 20 L20 22 L23 20 Z" fill="rgba(255,255,255,0.2)" />
-            {/* Center dot */}
             <circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.3)" strokeWidth="0.6" />
           </svg>
 
@@ -509,7 +425,7 @@ export function FloorPlanViewer({
           </button>
           <button
             type="button"
-            aria-label="Reset pan and zoom"
+            aria-label="Reset zoom"
             className="border-t border-white/10 px-1 pt-1 text-[10px] font-medium text-white/55 transition hover:text-white/85"
             onClick={(e) => {
               e.stopPropagation();

@@ -33,16 +33,9 @@ export function PresentationView({
   rooms,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const planContainerRef = useRef<HTMLDivElement | null>(null);
   const [viewport, setViewport] = useState<FloorplanViewport>(
     DEFAULT_FLOORPLAN_VIEWPORT
   );
-  const suppressBackdropClickRef = useRef(false);
-  const panSessionRef = useRef<null | {
-    pointerId: number;
-    startRoot: { x: number; y: number };
-    startPan: { x: number; y: number };
-  }>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [images, setImages] = useState<RoomImage[]>([]);
@@ -94,20 +87,6 @@ export function PresentationView({
   }, [open]);
 
   useEffect(() => {
-    const el = planContainerRef.current;
-    const svg = svgRef.current;
-    if (!open || !el || !svg) return;
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const factor = e.deltaY > 0 ? 0.9 : 1.11;
-      const root = svgClientToViewBox(svg, e.clientX, e.clientY);
-      setViewport((v) => nextViewportForWheelZoom(v, root, factor));
-    };
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, [open]);
-
-  useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -149,49 +128,6 @@ export function PresentationView({
     }
   };
 
-  const onPlanPointerDownCapture = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;
-    const t = e.target;
-    if (!(t instanceof Element)) return;
-    if (t.closest("[data-room-zone]")) return;
-    if (!t.closest("svg")) return;
-    const svg = svgRef.current;
-    if (!svg) return;
-    panSessionRef.current = {
-      pointerId: e.pointerId,
-      startRoot: svgClientToViewBox(svg, e.clientX, e.clientY),
-      startPan: { x: viewport.panX, y: viewport.panY },
-    };
-
-    const onMove = (ev: PointerEvent) => {
-      const s = panSessionRef.current;
-      if (!s || ev.pointerId !== s.pointerId || !svgRef.current) return;
-      const svgEl = svgRef.current;
-      const r = svgClientToViewBox(svgEl, ev.clientX, ev.clientY);
-      const dx = r.x - s.startRoot.x;
-      const dy = r.y - s.startRoot.y;
-      if (Math.hypot(dx, dy) > 0.45) suppressBackdropClickRef.current = true;
-      setViewport((prev) => ({
-        ...prev,
-        panX: s.startPan.x + dx,
-        panY: s.startPan.y + dy,
-      }));
-    };
-
-    const onUp = (ev: PointerEvent) => {
-      const s = panSessionRef.current;
-      if (!s || ev.pointerId !== s.pointerId) return;
-      panSessionRef.current = null;
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-    };
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-  };
-
   const zoomAtScreenCenter = (factor: number) => {
     const svg = svgRef.current;
     if (!svg) return;
@@ -205,14 +141,6 @@ export function PresentationView({
   };
 
   const resetView = () => setViewport(DEFAULT_FLOORPLAN_VIEWPORT);
-
-  const presentationBackdropClick = () => {
-    if (suppressBackdropClickRef.current) {
-      suppressBackdropClickRef.current = false;
-      return;
-    }
-    setSelectedId(null);
-  };
 
   if (typeof document === "undefined" || !open) return null;
 
@@ -255,19 +183,15 @@ export function PresentationView({
               : "max-w-[min(85vw,1100px)]"
           )}
         >
-          <div
-            ref={planContainerRef}
-            className="relative aspect-[4/3] w-full touch-none overflow-hidden rounded-2xl border border-white/[0.12] bg-black/40 shadow-2xl shadow-black/50 ring-1 ring-white/[0.06]"
-            onPointerDownCapture={onPlanPointerDownCapture}
-          >
-            <div className="relative h-full w-full cursor-grab active:cursor-grabbing">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-black/40 shadow-2xl shadow-black/50 ring-1 ring-white/[0.06]">
+            <div className="relative h-full w-full">
               <FloorPlanCanvas
                 floorplan={floorplan}
                 fallbackImageSrc="/floorplans/mt-barker-base.svg"
                 svgRef={svgRef}
                 baseLayerOpacity={0.85}
                 viewport={viewport}
-                onBackdropClick={presentationBackdropClick}
+                onBackdropClick={() => setSelectedId(null)}
               >
                 <RoomZoneOverlay
                   rooms={rooms}
@@ -308,7 +232,7 @@ export function PresentationView({
               </button>
               <button
                 type="button"
-                aria-label="Reset pan and zoom"
+                aria-label="Reset zoom"
                 className="border-t border-white/10 px-0.5 pt-1 text-[9px] font-medium text-white/55 transition hover:text-white/85"
                 onClick={(e) => {
                   e.stopPropagation();
