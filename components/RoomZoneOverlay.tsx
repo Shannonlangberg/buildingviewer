@@ -9,66 +9,73 @@ type Props = {
   selectedId: string | null;
   hoveredId: string | null;
   editMode: boolean;
-  /** When a room is selected, fade other zones (view mode only). */
-  dimUnselected?: boolean;
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
   draggingRoomId: string | null;
-  /** Begin moving a rectangular zone (not resize — handles are separate). */
   onRectMovePointerDown?: (roomId: string, e: React.PointerEvent) => void;
-  /** Begin moving a polygon zone (e.g. auditorium) as a whole. */
   onPolygonMovePointerDown?: (roomId: string, e: React.PointerEvent) => void;
 };
 
 const TRANSITION =
-  "opacity 0.22s ease, stroke-width 0.22s ease, filter 0.22s ease";
+  "opacity 0.25s ease, stroke-width 0.25s ease, filter 0.25s ease, stroke 0.25s ease, stroke-dashoffset 0.25s ease";
 
 export function RoomZoneOverlay({
   rooms,
   selectedId,
   hoveredId,
   editMode,
-  dimUnselected = false,
   onSelect,
   onHover,
   draggingRoomId,
   onRectMovePointerDown,
   onPolygonMovePointerDown,
 }: Props) {
+  const anyFocused = !editMode && (hoveredId != null || selectedId != null);
+
   return (
     <g className="room-zones">
       {rooms.map((room) => {
         const isSel = room.id === selectedId;
         const isHover = room.id === hoveredId;
         const dragging = room.id === draggingRoomId;
-        const othersDimmed =
-          dimUnselected && selectedId != null && !isSel && !isHover && !dragging;
+        const isFocused = isSel || isHover || dragging;
+        const isDimmed = anyFocused && !isFocused;
 
         const baseOpacity = editMode ? 0.48 : 0.55;
         let opacity = baseOpacity;
-        if (othersDimmed) opacity = Math.min(0.2, baseOpacity * 0.35);
-        else if (isSel || dragging) opacity = Math.min(0.92, baseOpacity + 0.3);
-        else if (isHover) opacity = Math.min(0.82, baseOpacity + 0.22);
+        if (isDimmed) opacity = 0.15;
+        else if (isSel || dragging) opacity = 0.88;
+        else if (isHover) opacity = 0.8;
 
-        const strokeW = isSel ? 0.52 : isHover ? 0.4 : 0.24;
+        const strokeW = isSel ? 0.55 : isHover ? 0.42 : 0.24;
         let filter: string | undefined;
-        if (isSel) filter = "url(#zoneGlow)";
+        if (isSel) filter = "url(#zonePulseGlow)";
         else if (isHover && !editMode) filter = "url(#zoneGlowHover)";
+
+        const stroke = isSel
+          ? "rgba(255,255,255,0.7)"
+          : isHover
+            ? "rgba(255,255,255,0.55)"
+            : "rgba(255,255,255,0.25)";
+
+        const dashProps = isSel
+          ? {
+              strokeDasharray: "1.2 0.6",
+              className: "zone-marching-ants",
+            }
+          : {};
 
         const common = {
           fill: room.color,
           opacity,
-          stroke: isSel
-            ? "rgba(255,255,255,0.55)"
-            : isHover
-              ? "rgba(255,255,255,0.48)"
-              : "rgba(255,255,255,0.32)",
+          stroke,
           strokeWidth: strokeW,
           style: {
             cursor: editMode ? "grab" : "pointer",
             transition: TRANSITION,
           } as const,
           filter,
+          ...dashProps,
           onPointerEnter: () => onHover(room.id),
           onPointerLeave: () => onHover(null),
           onClick: (e: React.MouseEvent) => {

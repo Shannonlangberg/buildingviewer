@@ -78,7 +78,28 @@ export function FloorPlanCanvas({
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
+        {/* Animated pulse glow for selected zone */}
+        <filter id="zonePulseGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="1.1" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
+
+      <style>{`
+        @keyframes marchingAnts {
+          to { stroke-dashoffset: -3.6; }
+        }
+        .zone-marching-ants {
+          animation: marchingAnts 0.8s linear infinite;
+        }
+        @keyframes pulseGlow {
+          0%, 100% { filter: url(#zonePulseGlow); }
+          50% { filter: url(#zoneGlow); }
+        }
+      `}</style>
       <g transform={viewportTransform}>
         <g
           data-floorplan-base="true"

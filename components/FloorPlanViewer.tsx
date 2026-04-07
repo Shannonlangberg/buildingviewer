@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   applyLayoutDragToRooms,
   type LayoutPointerDragState,
@@ -14,6 +14,7 @@ import {
 } from "@/lib/floorplan-viewport";
 import { removePolygonVertex } from "@/lib/polygon-edit";
 import type { Floorplan, RectResizeHandleId, Room } from "@/lib/types";
+import { ROOM_STATUS_LABELS } from "@/lib/types";
 import { parsePolygonPoints, serializePolygonPoints } from "@/lib/utils";
 import { FloorPlanCanvas } from "./FloorPlanCanvas";
 import { FloorPlanRoomLabels } from "./FloorPlanRoomLabels";
@@ -47,6 +48,9 @@ export function FloorPlanViewer({
     DEFAULT_FLOORPLAN_VIEWPORT
   );
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(
+    null
+  );
   const [drag, setDrag] = useState<LayoutPointerDragState | null>(null);
   const [draggingRoomId, setDraggingRoomId] = useState<string | null>(null);
   const movedRef = useRef(false);
@@ -58,6 +62,30 @@ export function FloorPlanViewer({
   useEffect(() => {
     if (editMode) setViewport(DEFAULT_FLOORPLAN_VIEWPORT);
   }, [editMode]);
+
+  const hoveredRoom = useMemo(
+    () => (hoveredId ? rooms.find((r) => r.id === hoveredId) ?? null : null),
+    [rooms, hoveredId]
+  );
+
+  const handleHover = useCallback(
+    (id: string | null) => {
+      setHoveredId(id);
+      if (!id) setTooltipPos(null);
+    },
+    []
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!hoveredId || editMode) return;
+      setTooltipPos({ x: e.clientX, y: e.clientY });
+    },
+    [hoveredId, editMode]
+  );
+
+  const anyFocused = !editMode && (hoveredId != null || selectedId != null);
+  const baseDimOpacity = anyFocused ? 0.55 : undefined;
 
   const defaultBase = "/floorplans/mt-barker-base.svg";
   const selectedRoom =
@@ -294,13 +322,13 @@ export function FloorPlanViewer({
   };
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden" onPointerMove={handlePointerMove}>
       <div className="relative h-full w-full">
         <FloorPlanCanvas
           floorplan={floorplan}
           fallbackImageSrc={defaultBase}
           svgRef={svgRef}
-          baseLayerOpacity={baseLayerOpacity}
+          baseLayerOpacity={baseDimOpacity ?? baseLayerOpacity}
           viewport={effectiveViewport}
           onBackdropClick={!editMode ? backdropClick : undefined}
         >
@@ -309,9 +337,8 @@ export function FloorPlanViewer({
             selectedId={selectedId}
             hoveredId={hoveredId}
             editMode={editMode}
-            dimUnselected={!editMode && Boolean(selectedId)}
             onSelect={handleZoneClick}
-            onHover={setHoveredId}
+            onHover={handleHover}
             draggingRoomId={draggingRoomId}
             onRectMovePointerDown={onRectMovePointerDown}
             onPolygonMovePointerDown={onPolygonMovePointerDown}
@@ -329,6 +356,8 @@ export function FloorPlanViewer({
           <FloorPlanRoomLabels
             rooms={rooms}
             editMode={editMode}
+            selectedId={selectedId}
+            hoveredId={hoveredId}
             onLabelPointerDown={onLabelPointerDown}
           />
 
@@ -434,6 +463,28 @@ export function FloorPlanViewer({
           >
             Reset
           </button>
+        </div>
+      )}
+
+      {!editMode && hoveredRoom && tooltipPos && (
+        <div
+          className="pointer-events-none fixed z-50 flex items-center gap-2 rounded-lg border border-white/15 bg-black/80 px-3 py-1.5 shadow-xl backdrop-blur-md"
+          style={{
+            left: tooltipPos.x + 14,
+            top: tooltipPos.y - 10,
+            transition: "left 0.06s ease-out, top 0.06s ease-out, opacity 0.15s ease",
+          }}
+        >
+          <span
+            className="h-2.5 w-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: hoveredRoom.color }}
+          />
+          <span className="text-xs font-semibold text-white/95">
+            {hoveredRoom.name}
+          </span>
+          <span className="text-[10px] text-white/45">
+            {ROOM_STATUS_LABELS[hoveredRoom.status]}
+          </span>
         </div>
       )}
     </div>

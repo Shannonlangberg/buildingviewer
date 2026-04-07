@@ -198,12 +198,16 @@ export function PresentationView({
                   selectedId={selectedId}
                   hoveredId={hoveredId}
                   editMode={false}
-                  dimUnselected={Boolean(selectedId)}
                   onSelect={handleSelectRoom}
                   onHover={setHoveredId}
                   draggingRoomId={null}
                 />
-                <FloorPlanRoomLabels rooms={rooms} editMode={false} />
+                <FloorPlanRoomLabels
+                  rooms={rooms}
+                  editMode={false}
+                  selectedId={selectedId}
+                  hoveredId={hoveredId}
+                />
               </FloorPlanCanvas>
             </div>
 
