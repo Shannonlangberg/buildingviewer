@@ -27,6 +27,81 @@ type Props = {
   roomNameSaving: boolean;
 };
 
+function LocalPersistHint({
+  capabilities,
+}: {
+  capabilities: CapabilitiesPayload;
+}) {
+  const isDev = process.env.NODE_ENV === "development";
+  return (
+    <div className="rounded-lg border border-amber-500/30 bg-amber-500/[0.07] p-2 text-[10px] leading-snug text-amber-100/85">
+      <p className="font-semibold text-amber-200/95">
+        Can’t add, delete, or upload yet
+      </p>
+      {isDev && (
+        <p className="mt-2 text-[10px] leading-snug text-amber-50/95">
+          <span className="font-medium text-amber-200/95">Local dev:</span> add /
+          delete / upload use server APIs that need{" "}
+          <code className="text-amber-200/95">SUPABASE_SERVICE_ROLE_KEY</code> in{" "}
+          <code className="text-amber-200/95">.env.local</code> — the{" "}
+          <em>anon</em> key alone is not enough. You can still{" "}
+          <strong>drag zones, resize handles, and move labels</strong> on the
+          plan; use <span className="text-slate-300">Save to Supabase</span> once
+          env is set.
+        </p>
+      )}
+      <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-amber-100/75">
+        {!capabilities.hasSupabaseUrl && (
+          <li>
+            {isDev ? (
+              <>
+                Create <code className="text-amber-200/95">.env.local</code> next
+                to <code className="text-amber-200/95">package.json</code> (copy{" "}
+                <code className="text-amber-200/95">.env.example</code>) and set{" "}
+                <code className="text-amber-200/95">
+                  NEXT_PUBLIC_SUPABASE_URL
+                </code>
+                . Restart <code className="text-amber-200/95">npm run dev</code>.
+              </>
+            ) : (
+              <>
+                Set{" "}
+                <code className="text-amber-200/95">
+                  NEXT_PUBLIC_SUPABASE_URL
+                </code>{" "}
+                on your production host’s env config, then redeploy.
+              </>
+            )}
+          </li>
+        )}
+        {!capabilities.hasServiceRoleKey && (
+          <li>
+            {isDev ? (
+              <>
+                In <code className="text-amber-200/95">.env.local</code>, set{" "}
+                <code className="text-amber-200/95">
+                  SUPABASE_SERVICE_ROLE_KEY
+                </code>{" "}
+                to the <em>service_role</em> secret (Supabase → Project Settings
+                → API). Restart <code className="text-amber-200/95">npm run dev</code>.
+              </>
+            ) : (
+              <>
+                Set{" "}
+                <code className="text-amber-200/95">
+                  SUPABASE_SERVICE_ROLE_KEY
+                </code>{" "}
+                — Supabase → Project Settings → API → copy{" "}
+                <em>service_role</em> (secret). Redeploy after saving.
+              </>
+            )}
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
 function hexForColorInput(c: string): string {
   const t = c.trim();
   return /^#[0-9A-Fa-f]{6}$/i.test(t) ? t : "#64748b";
@@ -256,32 +331,7 @@ export function FloorPlanEditor({
             </button>
           </div>
           {!canPersist && (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/[0.07] p-2 text-[10px] leading-snug text-amber-100/85">
-              <p className="font-semibold text-amber-200/95">
-                Can’t add, delete, or upload yet
-              </p>
-              <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-amber-100/75">
-                {!capabilities.hasSupabaseUrl && (
-                  <li>
-                    Set{" "}
-                    <code className="text-amber-200/95">
-                      NEXT_PUBLIC_SUPABASE_URL
-                    </code>{" "}
-                    on Railway (Variables), then redeploy.
-                  </li>
-                )}
-                {!capabilities.hasServiceRoleKey && (
-                  <li>
-                    Set{" "}
-                    <code className="text-amber-200/95">
-                      SUPABASE_SERVICE_ROLE_KEY
-                    </code>{" "}
-                    — Supabase → Project Settings → API → copy{" "}
-                    <em>service_role</em> (secret). Redeploy after saving.
-                  </li>
-                )}
-              </ul>
-            </div>
+            <LocalPersistHint capabilities={capabilities} />
           )}
         </div>
       )}
@@ -296,8 +346,9 @@ export function FloorPlanEditor({
           fill to move the whole zone.{" "}
           <span className="text-slate-400">Save layout</span> for positions and
           label text; use <span className="text-slate-400">Save label</span> to
-          write the name only. <span className="text-slate-400">Zones</span>{" "}
-          above add/remove shapes (saved in the database immediately).
+          write the name only.           <span className="text-slate-400">Zones</span>{" "}
+          above add/remove shapes (needs DB + service role). Without that, drag
+          handles on the plan to reshape/move only in memory until you can save.
         </p>
       )}
       {editMode && (
