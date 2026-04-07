@@ -2,6 +2,7 @@ import { BuildingShell } from "@/components/BuildingShell";
 import { getActiveFloorplan, getRooms } from "@/lib/data";
 import { urlEnablesLayoutTools } from "@/lib/layout-tools-url";
 import { MOCK_FLOORPLAN, MOCK_ROOMS } from "@/lib/mock-data";
+import { getCapabilitiesPayload } from "@/lib/server-capabilities";
 
 export const dynamic = "force-dynamic";
 
@@ -25,18 +26,14 @@ export default async function Home({ searchParams }: PageProps) {
 
   const urlShowsLayoutTools = urlEnablesLayoutTools(searchParams ?? {});
 
-  /** Server-only env read (not inlined like client `NEXT_PUBLIC_*`), so Railway/runtime config works. */
-  const canPersist = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+  const initialCapabilities = getCapabilitiesPayload();
 
   return (
     <BuildingShell
       initialRooms={rooms}
       initialFloorplan={floorplan}
       urlShowsLayoutTools={urlShowsLayoutTools}
-      canPersist={canPersist}
+      initialCapabilities={initialCapabilities}
     />
   );
 }

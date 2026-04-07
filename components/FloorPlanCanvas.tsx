@@ -31,6 +31,10 @@ export function FloorPlanCanvas({
       ref={svgRef as unknown as Ref<SVGSVGElement>}
       viewBox="0 0 100 100"
       className="absolute inset-0 h-full w-full touch-none select-none font-sans [text-rendering:geometricPrecision]"
+      style={{
+        fontFamily:
+          "var(--font-body, ui-sans-serif), system-ui, -apple-system, sans-serif",
+      }}
       preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-label="Floor plan canvas"

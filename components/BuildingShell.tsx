@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { CapabilitiesPayload } from "@/lib/server-capabilities";
 import type { Floorplan, Room } from "@/lib/types";
 import { FloorPlanEditor } from "./FloorPlanEditor";
 import { FloorPlanViewer } from "./FloorPlanViewer";
@@ -23,15 +24,15 @@ type Props = {
   initialFloorplan: Floorplan | null;
   /** From server `searchParams` on first paint (avoids useSearchParams SSR issues). */
   urlShowsLayoutTools: boolean;
-  /** Whether writes (upload, room save, zones) are allowed — from server runtime env. */
-  canPersist: boolean;
+  /** Supabase write capability from server render (refreshed client-side via /api/capabilities). */
+  initialCapabilities: CapabilitiesPayload;
 };
 
 export function BuildingShell({
   initialRooms,
   initialFloorplan,
   urlShowsLayoutTools,
-  canPersist,
+  initialCapabilities,
 }: Props) {
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
   const [floorplan, setFloorplan] = useState<Floorplan | null>(
@@ -45,6 +46,30 @@ export function BuildingShell({
   const [savingLayout, setSavingLayout] = useState(false);
   const [shapeBusy, setShapeBusy] = useState(false);
   const [layoutUnlocked, setLayoutUnlocked] = useState(false);
+  const [liveCapabilities, setLiveCapabilities] =
+    useState<CapabilitiesPayload | null>(null);
+  const [roomColorSaving, setRoomColorSaving] = useState(false);
+  const [roomNameSaving, setRoomNameSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/capabilities")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: CapabilitiesPayload | null) => {
+        if (!cancelled && data && typeof data.canPersist === "boolean") {
+          setLiveCapabilities(data);
+        }
+      })
+      .catch(() => {
+        /* keep initialCapabilities from server */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const capabilities = liveCapabilities ?? initialCapabilities;
+  const writesEnabled = capabilities.canPersist;
 
   useEffect(() => {
     try {
@@ -100,7 +125,7 @@ export function BuildingShell({
   }, [editMode]);
 
   const addShape = async (shape_type: "rect" | "polygon") => {
-    if (!canPersist) return;
+    if (!writesEnabled) return;
     setShapeBusy(true);
     try {
       const res = await fetch("/api/rooms", {
@@ -120,7 +145,7 @@ export function BuildingShell({
   };
 
   const deleteSelectedShape = async () => {
-    if (!canPersist || !selectedRoom) return;
+    if (!writesEnabled || !selectedRoom) return;
     const toRemove = selectedRoom;
     if (
       !confirm(
@@ -160,6 +185,45 @@ export function BuildingShell({
     );
   }, []);
 
+  const saveRoomColorToDb = useCallback(
+    async (roomId: string, color: string) => {
+      if (!writesEnabled) return;
+      setRoomColorSaving(true);
+      try {
+        const res = await fetch("/api/rooms", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ updates: [{ id: roomId, color }] }),
+        });
+        if (!res.ok) return;
+        await refreshData();
+      } finally {
+        setRoomColorSaving(false);
+      }
+    },
+    [writesEnabled, refreshData]
+  );
+
+  const saveRoomNameToDb = useCallback(
+    async (roomId: string, name: string) => {
+      const trimmed = name.trim();
+      if (!writesEnabled || !trimmed) return;
+      setRoomNameSaving(true);
+      try {
+        const res = await fetch("/api/rooms", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ updates: [{ id: roomId, name: trimmed }] }),
+        });
+        if (!res.ok) return;
+        await refreshData();
+      } finally {
+        setRoomNameSaving(false);
+      }
+    },
+    [writesEnabled, refreshData]
+  );
+
   const toggleEdit = () => {
     setEditMode((v) => {
       const next = !v;
@@ -173,6 +237,7 @@ export function BuildingShell({
     try {
       const updates = draftRooms.map((r) => ({
         id: r.id,
+        name: r.name.trim() || "Untitled zone",
         label_x: r.label_x,
         label_y: r.label_y,
         rect_x: r.rect_x,
@@ -239,7 +304,7 @@ export function BuildingShell({
             room={selectedRoom}
             editMode={editMode}
             onRoomsRefresh={refreshData}
-            canPersist={canPersist}
+            canPersist={writesEnabled}
             onDraftRoomPatch={editMode ? patchDraftRoom : undefined}
           />
         </div>
@@ -254,11 +319,24 @@ export function BuildingShell({
           shapeBusy={shapeBusy}
           onSaveLayout={() => void saveLayout()}
           onToggleEdit={toggleEdit}
-          canPersist={canPersist}
+          canPersist={writesEnabled}
+          capabilities={capabilities}
           onFloorplanUploaded={() => void refreshData()}
           onAddRect={() => void addShape("rect")}
           onAddPolygon={() => void addShape("polygon")}
           onDeleteSelected={() => void deleteSelectedShape()}
+          onRoomColorDraft={(roomId, color) => patchDraftRoom(roomId, { color })}
+          onSaveRoomColor={(roomId, color) =>
+            void saveRoomColorToDb(roomId, color)
+          }
+          roomColorSaving={roomColorSaving}
+          onRoomNameDraft={(roomId, name) =>
+            patchDraftRoom(roomId, { name })
+          }
+          onSaveRoomName={(roomId, name) =>
+            void saveRoomNameToDb(roomId, name)
+          }
+          roomNameSaving={roomNameSaving}
         />
       )}
     </div>

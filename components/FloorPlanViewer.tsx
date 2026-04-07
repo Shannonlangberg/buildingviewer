@@ -203,8 +203,22 @@ export function FloorPlanViewer({
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0e14] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-      <div className="relative aspect-[4/3] w-full">
+    <div
+      className="relative w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0e14] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+      style={{
+        position: "relative",
+        width: "100%",
+        overflow: "hidden",
+        borderRadius: 16,
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "#0a0e14",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        className="relative aspect-[4/3] w-full"
+        style={{ position: "relative", width: "100%", aspectRatio: "4 / 3" }}
+      >
         <FloorPlanCanvas
           floorplan={floorplan}
           fallbackImageSrc={defaultBase}
@@ -231,7 +245,7 @@ export function FloorPlanViewer({
               fill="rgba(248,250,252,0.92)"
               style={{
                 fontFamily:
-                  "var(--font-body), system-ui, -apple-system, sans-serif",
+                  "var(--font-body, ui-sans-serif), system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
                 fontSize: "2.1px",
                 fontWeight: 600,
                 pointerEvents: editMode ? "auto" : "none",
@@ -272,7 +286,12 @@ export function FloorPlanViewer({
               y="-3.8"
               textAnchor="middle"
               fill="rgba(148,163,184,0.9)"
-              style={{ fontSize: "1.8px", fontWeight: 700 }}
+              style={{
+                fontSize: "1.8px",
+                fontWeight: 700,
+                fontFamily:
+                  "var(--font-body, ui-sans-serif), system-ui, sans-serif",
+              }}
             >
               N
             </text>

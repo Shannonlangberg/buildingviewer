@@ -1,5 +1,6 @@
 "use client";
 
+import type { CapabilitiesPayload } from "@/lib/server-capabilities";
 import type { Room } from "@/lib/types";
 import { ROOM_STATUS_LABELS } from "@/lib/types";
 import { FloorplanBaseUpload } from "./FloorplanBaseUpload";
@@ -13,25 +14,85 @@ type Props = {
   onSaveLayout: () => void;
   onToggleEdit: () => void;
   canPersist: boolean;
+  capabilities: CapabilitiesPayload;
   onFloorplanUploaded: () => void;
   onAddRect: () => void;
   onAddPolygon: () => void;
   onDeleteSelected: () => void;
+  onRoomColorDraft: (roomId: string, color: string) => void;
+  onSaveRoomColor: (roomId: string, color: string) => void;
+  roomColorSaving: boolean;
+  onRoomNameDraft: (roomId: string, name: string) => void;
+  onSaveRoomName: (roomId: string, name: string) => void;
+  roomNameSaving: boolean;
 };
 
-function LayoutLiveReadout({ room }: { room: Room }) {
+function hexForColorInput(c: string): string {
+  const t = c.trim();
+  return /^#[0-9A-Fa-f]{6}$/i.test(t) ? t : "#64748b";
+}
+
+function LayoutLiveReadout({
+  room,
+  canPersist,
+  onNameDraft,
+  onSaveRoomName,
+  roomNameSaving,
+  onColorDraft,
+  onSaveRoomColor,
+  roomColorSaving,
+}: {
+  room: Room;
+  canPersist: boolean;
+  onNameDraft: (name: string) => void;
+  onSaveRoomName: () => void;
+  roomNameSaving: boolean;
+  onColorDraft: (hex: string) => void;
+  onSaveRoomColor: () => void;
+  roomColorSaving: boolean;
+}) {
   return (
     <div className="grid max-h-[32vh] gap-3 overflow-y-auto font-mono text-[11px] leading-relaxed text-slate-400 lg:max-h-[min(280px,35vh)] lg:grid-cols-1 lg:border-t lg:border-white/10 lg:pt-3">
       <div className="space-y-1">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
           Room
         </p>
-        <p className="text-slate-200">{room.name}</p>
+        <div className="space-y-1.5">
+          <label className="block text-[9px] uppercase tracking-wide text-slate-500">
+            Label on plan
+          </label>
+          <input
+            type="text"
+            value={room.name}
+            onChange={(e) => onNameDraft(e.target.value)}
+            className="w-full rounded-lg border border-white/15 bg-white/[0.06] px-2 py-1.5 text-[11px] text-slate-100 outline-none focus:ring-1 focus:ring-sky-500/40"
+            style={{ fontFamily: "inherit" }}
+            autoComplete="off"
+            placeholder="Name shown on the floor plan"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={
+                !canPersist || roomNameSaving || !room.name.trim()
+              }
+              onClick={() => void onSaveRoomName()}
+              className="rounded-md border border-emerald-500/35 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {roomNameSaving ? "Saving…" : "Save label"}
+            </button>
+            <span className="max-w-[14rem] text-[9px] leading-snug text-slate-600">
+              Drag the label on the plan to move it.{" "}
+              <span className="text-slate-500">Save layout</span> stores
+              position.
+            </span>
+          </div>
+        </div>
         <p>
           <span className="text-slate-500">status · </span>
           {ROOM_STATUS_LABELS[room.status]}
         </p>
-        <p className="flex items-center gap-2">
+        <p className="flex flex-wrap items-center gap-2">
           <span className="text-slate-500">color · </span>
           <span
             className="inline-block h-3 w-3 rounded border border-white/20"
@@ -40,6 +101,32 @@ function LayoutLiveReadout({ room }: { room: Room }) {
           />
           <span>{room.color}</span>
         </p>
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <label className="flex cursor-pointer items-center gap-2 text-[10px] text-slate-500">
+            <span className="shrink-0">Picker</span>
+            <input
+              type="color"
+              value={hexForColorInput(room.color)}
+              onChange={(e) => onColorDraft(e.target.value)}
+              className="h-7 w-14 cursor-pointer rounded border border-white/20 bg-transparent p-0"
+              title="Updates the block preview; save to write to the database"
+            />
+          </label>
+          <button
+            type="button"
+            disabled={!canPersist || roomColorSaving}
+            onClick={() => void onSaveRoomColor()}
+            className="rounded-md border border-sky-500/35 bg-sky-500/10 px-2 py-1 text-[10px] font-medium text-sky-100 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {roomColorSaving ? "Saving…" : "Save colour"}
+          </button>
+        </div>
+        {!canPersist && (
+          <p className="text-[9px] leading-snug text-slate-600">
+            Typing and the colour picker update the preview. Saving needs the
+            service role key on the server.
+          </p>
+        )}
         <p>
           <span className="text-slate-500">shape · </span>
           {room.shape_type}
@@ -80,10 +167,17 @@ export function FloorPlanEditor({
   onSaveLayout,
   onToggleEdit,
   canPersist,
+  capabilities,
   onFloorplanUploaded,
   onAddRect,
   onAddPolygon,
   onDeleteSelected,
+  onRoomColorDraft,
+  onSaveRoomColor,
+  roomColorSaving,
+  onRoomNameDraft,
+  onSaveRoomName,
+  roomNameSaving,
 }: Props) {
   const r = selectedRoom
     ? draftRooms.find((x) => x.id === selectedRoom.id) ?? selectedRoom
@@ -162,10 +256,32 @@ export function FloorPlanEditor({
             </button>
           </div>
           {!canPersist && (
-            <p className="text-[10px] text-slate-500">
-              Add/delete need Supabase +{" "}
-              <code className="text-slate-400">SUPABASE_SERVICE_ROLE_KEY</code>.
-            </p>
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/[0.07] p-2 text-[10px] leading-snug text-amber-100/85">
+              <p className="font-semibold text-amber-200/95">
+                Can’t add, delete, or upload yet
+              </p>
+              <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-amber-100/75">
+                {!capabilities.hasSupabaseUrl && (
+                  <li>
+                    Set{" "}
+                    <code className="text-amber-200/95">
+                      NEXT_PUBLIC_SUPABASE_URL
+                    </code>{" "}
+                    on Railway (Variables), then redeploy.
+                  </li>
+                )}
+                {!capabilities.hasServiceRoleKey && (
+                  <li>
+                    Set{" "}
+                    <code className="text-amber-200/95">
+                      SUPABASE_SERVICE_ROLE_KEY
+                    </code>{" "}
+                    — Supabase → Project Settings → API → copy{" "}
+                    <em>service_role</em> (secret). Redeploy after saving.
+                  </li>
+                )}
+              </ul>
+            </div>
           )}
         </div>
       )}
@@ -178,9 +294,10 @@ export function FloorPlanEditor({
           <span className="font-medium text-slate-400">Polygons:</span> drag
           <span className="text-slate-400"> corners</span> to reshape, or the
           fill to move the whole zone.{" "}
-          <span className="text-slate-400">Save layout</span> for positions; use{" "}
-          <span className="text-slate-400">Zones</span> above to add/remove shapes
-          (saved in the database immediately).
+          <span className="text-slate-400">Save layout</span> for positions and
+          label text; use <span className="text-slate-400">Save label</span> to
+          write the name only. <span className="text-slate-400">Zones</span>{" "}
+          above add/remove shapes (saved in the database immediately).
         </p>
       )}
       {editMode && (
@@ -189,7 +306,18 @@ export function FloorPlanEditor({
           onUploaded={onFloorplanUploaded}
         />
       )}
-      {editMode && r && <LayoutLiveReadout room={r} />}
+      {editMode && r && (
+        <LayoutLiveReadout
+          room={r}
+          canPersist={canPersist}
+          onNameDraft={(name) => onRoomNameDraft(r.id, name)}
+          onSaveRoomName={() => onSaveRoomName(r.id, r.name)}
+          roomNameSaving={roomNameSaving}
+          onColorDraft={(hex) => onRoomColorDraft(r.id, hex)}
+          onSaveRoomColor={() => onSaveRoomColor(r.id, r.color)}
+          roomColorSaving={roomColorSaving}
+        />
+      )}
     </div>
   );
 }
