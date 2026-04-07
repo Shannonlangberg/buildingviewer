@@ -384,7 +384,7 @@ export function FloorPlanEditor({
 
   return (
     <div
-      className="mb-6 w-full rounded-2xl border border-white/10 bg-app-panel p-4 text-xs text-gray-300 shadow-lg shadow-black/40 sm:p-5"
+      className="mb-4 w-full rounded-2xl border border-white/[0.12] bg-black/50 p-4 text-xs text-gray-300 shadow-2xl shadow-black/50 backdrop-blur-xl backdrop-saturate-150 sm:p-5"
       role="complementary"
       aria-label="Layout editor"
     >

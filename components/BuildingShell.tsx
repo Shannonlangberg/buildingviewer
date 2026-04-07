@@ -9,6 +9,7 @@ import {
 import type { Floorplan, Room } from "@/lib/types";
 import { FloorPlanEditor } from "./FloorPlanEditor";
 import { FloorPlanViewer } from "./FloorPlanViewer";
+import { PresentationView } from "./PresentationView";
 import { RoomDetailPanel } from "./RoomDetailPanel";
 import { RoomSidebar } from "./RoomSidebar";
 
@@ -57,6 +58,7 @@ export function BuildingShell({
   const [roomColorSaving, setRoomColorSaving] = useState(false);
   const [roomNameSaving, setRoomNameSaving] = useState(false);
   const [labelStyleSaving, setLabelStyleSaving] = useState(false);
+  const [presentMode, setPresentMode] = useState(false);
   const [baseLayerOpacity, setBaseLayerOpacity] = useState(
     DEFAULT_FLOORPLAN_BASE_OPACITY
   );
@@ -330,16 +332,28 @@ export function BuildingShell({
     <div className="flex min-h-screen flex-col bg-app-bg text-gray-200">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-app-header">
         <div className="relative mx-auto flex h-[3.25rem] max-w-[1600px] items-center justify-between px-4 sm:h-14 sm:px-6">
-          <div
-            className="flex w-24 shrink-0 items-center gap-1.5 text-gray-600 sm:w-28"
-            aria-hidden
-          >
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-app-panel text-[10px] font-medium text-gray-500">
-              ⌂
-            </span>
-            <span className="hidden rounded-lg border border-white/10 bg-app-panel px-2 py-1.5 text-[10px] font-medium text-gray-500 sm:inline">
-              View
-            </span>
+          <div className="flex w-24 shrink-0 items-center gap-1.5 sm:w-28">
+            <button
+              type="button"
+              onClick={() => setPresentMode(true)}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-app-panel px-2.5 text-[11px] font-medium text-gray-300 transition hover:border-white/20 hover:bg-app-raised hover:text-white"
+              title="Present floor plan fullscreen"
+            >
+              <svg
+                className="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
+                />
+              </svg>
+              <span className="hidden sm:inline">Present</span>
+            </button>
           </div>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
             <h1 className="pointer-events-auto text-[0.95rem] font-semibold tracking-tight text-white sm:text-lg">
@@ -363,8 +377,8 @@ export function BuildingShell({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6 sm:py-8">
-        {showEditChrome && (
+      {showEditChrome && (
+        <div className="mx-auto w-full max-w-[1600px] px-4 pt-6 sm:px-6">
           <FloorPlanEditor
             editMode={editMode}
             selectedRoom={selectedRoom}
@@ -405,13 +419,13 @@ export function BuildingShell({
             baseLayerOpacity={baseLayerOpacity}
             onBaseLayerOpacityChange={setBaseLayerOpacityPersisted}
           />
-        )}
-        <div className="flex flex-col gap-7 lg:grid lg:grid-cols-[minmax(220px,280px)_minmax(0,1fr)_minmax(280px,380px)] lg:items-start lg:gap-8">
-          <RoomSidebar
-            rooms={displayRooms}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
+        </div>
+      )}
+
+      {/* Design-board layout: floor plan is the canvas, panels float on top */}
+      <main className="relative flex-1">
+        {/* Floor plan — fills entire main area as the canvas */}
+        <div className="absolute inset-0">
           <FloorPlanViewer
             floorplan={floorplan}
             rooms={displayRooms}
@@ -421,13 +435,32 @@ export function BuildingShell({
             onRoomsDirty={editMode ? setDraftRooms : undefined}
             baseLayerOpacity={baseLayerOpacity}
           />
-          <RoomDetailPanel
-            room={selectedRoom}
-            editMode={editMode}
-            onRoomsRefresh={refreshData}
-            canPersist={writesEnabled}
-            onDraftRoomPatch={editMode ? patchDraftRoom : undefined}
-          />
+        </div>
+
+        {/* Floating panels on top */}
+        <div className="pointer-events-none relative z-10 flex min-h-[calc(100vh-3.75rem)] flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-start">
+          {/* Left: room sidebar */}
+          <div className="pointer-events-auto w-full shrink-0 lg:w-[220px] xl:w-[250px]">
+            <RoomSidebar
+              rooms={displayRooms}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+          </div>
+
+          {/* Middle: spacer — lets the floor plan show through */}
+          <div className="hidden flex-1 lg:block" />
+
+          {/* Right: gallery panel */}
+          <div className="pointer-events-auto w-full shrink-0 lg:w-[320px] xl:w-[360px]">
+            <RoomDetailPanel
+              room={selectedRoom}
+              editMode={editMode}
+              onRoomsRefresh={refreshData}
+              canPersist={writesEnabled}
+              onDraftRoomPatch={editMode ? patchDraftRoom : undefined}
+            />
+          </div>
         </div>
       </main>
 
@@ -438,6 +471,13 @@ export function BuildingShell({
           <span>Campus viewer</span>
         </div>
       </footer>
+
+      <PresentationView
+        open={presentMode}
+        onClose={() => setPresentMode(false)}
+        floorplan={floorplan}
+        rooms={rooms}
+      />
     </div>
   );
 }

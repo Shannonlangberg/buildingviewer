@@ -252,9 +252,9 @@ export function RoomDetailPanel({
 
   if (!room) {
     return (
-      <section className="flex min-h-[240px] flex-col justify-center rounded-2xl border border-white/10 bg-app-panel p-8 text-center shadow-lg shadow-black/40">
-        <p className="text-sm leading-relaxed text-gray-500">
-          Choose a room to view its gallery.
+      <section className="flex min-h-[200px] flex-col justify-center rounded-2xl border border-white/[0.12] bg-black/50 p-8 text-center shadow-2xl shadow-black/50 backdrop-blur-xl backdrop-saturate-150">
+        <p className="text-sm leading-relaxed text-gray-400">
+          Select a room to view its gallery.
         </p>
       </section>
     );
@@ -266,8 +266,7 @@ export function RoomDetailPanel({
   return (
     <section
       className={cn(
-        "flex flex-col gap-5 rounded-2xl border border-white/10 bg-app-panel p-5 shadow-lg shadow-black/40 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto",
-        sleekGallery && "ring-1 ring-white/[0.06]"
+        "flex flex-col gap-5 rounded-2xl border border-white/[0.12] bg-black/50 p-5 shadow-2xl shadow-black/50 backdrop-blur-xl backdrop-saturate-150 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto"
       )}
     >
       <header
@@ -352,7 +351,7 @@ export function RoomDetailPanel({
         </h3>
         <div
           className={cn(
-            "relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-app-inset",
+            "relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black/40",
             sleekGallery && "rounded-2xl"
           )}
         >

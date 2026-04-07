@@ -232,23 +232,8 @@ export function FloorPlanViewer({
   };
 
   return (
-    <div
-      className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-app-panel shadow-lg shadow-black/50"
-      style={{
-        position: "relative",
-        width: "100%",
-        overflow: "hidden",
-        borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.10)",
-        background: "#1a1d26",
-        boxSizing: "border-box",
-        boxShadow: "0 16px 40px rgba(0,0,0,0.45)",
-      }}
-    >
-      <div
-        className="relative aspect-[4/3] w-full bg-app-bg"
-        style={{ position: "relative", width: "100%", aspectRatio: "4 / 3" }}
-      >
+    <div className="relative h-full w-full overflow-hidden">
+      <div className="relative h-full w-full">
         <FloorPlanCanvas
           floorplan={floorplan}
           fallbackImageSrc={defaultBase}

@@ -92,15 +92,14 @@ type Props = {
 export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
   return (
     <aside
-      className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-app-panel p-5 shadow-lg shadow-black/40 lg:min-h-0 lg:max-h-[calc(100vh-8rem)]"
+      className="flex flex-col gap-3 rounded-2xl border border-white/[0.12] bg-black/50 p-4 shadow-2xl shadow-black/50 backdrop-blur-xl backdrop-saturate-150 lg:min-h-0 lg:max-h-[calc(100vh-5rem)]"
       style={{
         display: "flex",
         flexDirection: "column",
         gap: 12,
         borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.10)",
-        background: "#1a1d26",
-        padding: 20,
+        border: "1px solid rgba(255,255,255,0.12)",
+        padding: 16,
         boxSizing: "border-box",
       }}
     >
