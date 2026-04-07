@@ -1,6 +1,9 @@
 export type RoomStatus = "pending" | "in_progress" | "confirmed";
 export type ShapeType = "rect" | "polygon";
 
+/** Resize affordances for rectangular zones in layout edit mode (SVG viewBox space). */
+export type RectResizeHandleId = "se" | "e" | "s";
+
 export interface Floorplan {
   id: string;
   name: string;

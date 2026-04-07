@@ -11,7 +11,10 @@ type Props = {
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
   draggingRoomId: string | null;
-  onRectPointerDown?: (roomId: string, e: React.PointerEvent) => void;
+  /** Begin moving a rectangular zone (not resize — handles are separate). */
+  onRectMovePointerDown?: (roomId: string, e: React.PointerEvent) => void;
+  /** Begin moving a polygon zone (e.g. auditorium) as a whole. */
+  onPolygonMovePointerDown?: (roomId: string, e: React.PointerEvent) => void;
 };
 
 export function RoomZoneOverlay({
@@ -22,7 +25,8 @@ export function RoomZoneOverlay({
   onSelect,
   onHover,
   draggingRoomId,
-  onRectPointerDown,
+  onRectMovePointerDown,
+  onPolygonMovePointerDown,
 }: Props) {
   return (
     <g className="room-zones">
@@ -64,6 +68,10 @@ export function RoomZoneOverlay({
               key={room.id}
               d={d}
               {...common}
+              onPointerDown={(e) => {
+                if (editMode && onPolygonMovePointerDown)
+                  onPolygonMovePointerDown(room.id, e);
+              }}
             />
           );
         }
@@ -83,7 +91,8 @@ export function RoomZoneOverlay({
             ry={0.35}
             {...common}
             onPointerDown={(e) => {
-              if (editMode && onRectPointerDown) onRectPointerDown(room.id, e);
+              if (editMode && onRectMovePointerDown)
+                onRectMovePointerDown(room.id, e);
             }}
           />
         );

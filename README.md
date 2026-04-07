@@ -20,10 +20,12 @@ Open [http://localhost:3000](http://localhost:3000).
 3. Copy **Project URL**, **anon key**, and **service role key** into `.env.local` (see `.env.example`).
 4. The `room-images` bucket is created by the schema; public read is enabled for gallery URLs.
 
-## Dev layout editor
+## Layout editor
 
-- Set `NEXT_PUBLIC_SHOW_FLOORPLAN_EDIT=true`, **or** add `?edit=1` to the URL.
-- Drag labels and rectangular zones; **Save to Supabase** uses `SUPABASE_SERVICE_ROLE_KEY` via `/api/rooms`.
+- **Local:** the “Edit layout” bar appears automatically in `next dev`.
+- **Production:** set `NEXT_PUBLIC_SHOW_FLOORPLAN_EDIT=true` if you need it on a staging deploy.
+- Drag labels; move rectangles; use corner/edge handles to resize; **drag polygon rooms** (e.g. Auditorium) to move the whole shape. **Save to Supabase** uses `SUPABASE_SERVICE_ROLE_KEY` via `/api/rooms`.
+- **Upload base floor plan:** in layout edit, use **Upload base floor plan** → `POST /api/floorplans/upload` stores the file in the same storage bucket under `floorplans/` and sets the active row’s `image_path` (room overlays stay on top).
 
 ## Deploy on Railway
 

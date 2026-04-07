@@ -3,14 +3,26 @@
 import { useEffect, useState } from "react";
 import type { Room, RoomStatus } from "@/lib/types";
 
+type RoomDraftPatch = Partial<
+  Pick<Room, "name" | "status" | "color">
+>;
+
 type Props = {
   room: Room | null;
   visible: boolean;
   onSaved: () => void;
   canPersist: boolean;
+  /** Sync field edits to parent draft state (floor plan preview while editing layout). */
+  onDraftChange?: (patch: RoomDraftPatch) => void;
 };
 
-export function RoomEditorForm({ room, visible, onSaved, canPersist }: Props) {
+export function RoomEditorForm({
+  room,
+  visible,
+  onSaved,
+  canPersist,
+  onDraftChange,
+}: Props) {
   const [status, setStatus] = useState<RoomStatus>("pending");
   const [color, setColor] = useState("#64748b");
   const [name, setName] = useState("");
@@ -65,7 +77,11 @@ export function RoomEditorForm({ room, visible, onSaved, canPersist }: Props) {
           Name
           <input
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setName(v);
+              onDraftChange?.({ name: v });
+            }}
             className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-sm text-slate-100"
           />
         </label>
@@ -73,7 +89,11 @@ export function RoomEditorForm({ room, visible, onSaved, canPersist }: Props) {
           Status
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as RoomStatus)}
+            onChange={(e) => {
+              const v = e.target.value as RoomStatus;
+              setStatus(v);
+              onDraftChange?.({ status: v });
+            }}
             className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-sm text-slate-100"
           >
             <option value="pending">Pending</option>
@@ -86,7 +106,11 @@ export function RoomEditorForm({ room, visible, onSaved, canPersist }: Props) {
           <input
             type="color"
             value={color}
-            onChange={(e) => setColor(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setColor(v);
+              onDraftChange?.({ color: v });
+            }}
             className="mt-1 h-9 w-full cursor-pointer rounded-lg border border-white/10 bg-transparent p-0"
           />
         </label>

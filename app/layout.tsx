@@ -26,9 +26,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={`dark ${outfit.variable} ${dmSans.variable}`}>
       <body
-        className={`${outfit.variable} ${dmSans.variable} min-h-screen bg-[#070a0f] font-sans antialiased`}
+        className={`${dmSans.className} min-h-screen bg-[#070a0f] font-sans text-slate-200 antialiased`}
       >
         {children}
       </body>

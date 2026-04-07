@@ -1,20 +1,38 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Floorplan, Room } from "@/lib/types";
 import { FloorPlanEditor } from "./FloorPlanEditor";
 import { FloorPlanViewer } from "./FloorPlanViewer";
 import { RoomDetailPanel } from "./RoomDetailPanel";
 import { RoomSidebar } from "./RoomSidebar";
 
+const LAYOUT_SESSION_KEY = "mtb-layout-tools-on";
+
+function editQueryEnabled(search: string): boolean {
+  const q = search.startsWith("?") ? search : `?${search}`;
+  const p = new URLSearchParams(q);
+  const e = (p.get("edit") ?? "").toLowerCase();
+  if (e === "1" || e === "true" || e === "yes") return true;
+  if (p.get("layout") === "1") return true;
+  return false;
+}
+
 type Props = {
   initialRooms: Room[];
   initialFloorplan: Floorplan | null;
+  /** From server `searchParams` on first paint (avoids useSearchParams SSR issues). */
+  urlShowsLayoutTools: boolean;
+  /** Whether writes (upload, room save, zones) are allowed — from server runtime env. */
+  canPersist: boolean;
 };
 
-export function BuildingShell({ initialRooms, initialFloorplan }: Props) {
-  const searchParams = useSearchParams();
+export function BuildingShell({
+  initialRooms,
+  initialFloorplan,
+  urlShowsLayoutTools,
+  canPersist,
+}: Props) {
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
   const [floorplan, setFloorplan] = useState<Floorplan | null>(
     initialFloorplan
@@ -25,14 +43,45 @@ export function BuildingShell({ initialRooms, initialFloorplan }: Props) {
   const [editMode, setEditMode] = useState(false);
   const [draftRooms, setDraftRooms] = useState<Room[]>(initialRooms);
   const [savingLayout, setSavingLayout] = useState(false);
+  const [shapeBusy, setShapeBusy] = useState(false);
+  const [layoutUnlocked, setLayoutUnlocked] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(LAYOUT_SESSION_KEY) === "1") {
+        setLayoutUnlocked(true);
+      }
+    } catch {
+      /* private mode */
+    }
+    if (typeof window !== "undefined") {
+      if (editQueryEnabled(window.location.search)) {
+        try {
+          sessionStorage.setItem(LAYOUT_SESSION_KEY, "1");
+        } catch {
+          /* ignore */
+        }
+        setLayoutUnlocked(true);
+      }
+    }
+  }, []);
 
   const showEditChrome =
+    process.env.NODE_ENV === "development" ||
     process.env.NEXT_PUBLIC_SHOW_FLOORPLAN_EDIT === "true" ||
-    searchParams.get("edit") === "1";
+    urlShowsLayoutTools ||
+    layoutUnlocked;
 
-  const canPersist = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const unlockLayoutTools = () => {
+    setLayoutUnlocked(true);
+    try {
+      sessionStorage.setItem(LAYOUT_SESSION_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  };
 
-  const refreshData = useCallback(async () => {
+  const refreshData = useCallback(async (): Promise<Room[]> => {
     try {
       const [rRes, fRes] = await Promise.all([
         fetch("/api/rooms"),
@@ -40,15 +89,63 @@ export function BuildingShell({ initialRooms, initialFloorplan }: Props) {
       ]);
       const rJson = await rRes.json();
       const fJson = await fRes.json();
-      if (Array.isArray(rJson.rooms)) {
-        setRooms(rJson.rooms);
-        if (editMode) setDraftRooms(rJson.rooms);
-      }
+      const list: Room[] = Array.isArray(rJson.rooms) ? rJson.rooms : [];
+      setRooms(list);
+      if (editMode) setDraftRooms(list);
       if (fJson.floorplan) setFloorplan(fJson.floorplan);
+      return list;
     } catch {
-      /* keep existing */
+      return [];
     }
   }, [editMode]);
+
+  const addShape = async (shape_type: "rect" | "polygon") => {
+    if (!canPersist) return;
+    setShapeBusy(true);
+    try {
+      const res = await fetch("/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shape_type }),
+      });
+      const j = (await res.json()) as { room?: Room; error?: string };
+      if (!res.ok) throw new Error(j.error ?? "Create failed");
+      await refreshData();
+      if (j.room?.id) setSelectedId(j.room.id);
+    } catch {
+      /* optional toast */
+    } finally {
+      setShapeBusy(false);
+    }
+  };
+
+  const deleteSelectedShape = async () => {
+    if (!canPersist || !selectedRoom) return;
+    const toRemove = selectedRoom;
+    if (
+      !confirm(
+        `Delete “${toRemove.name}”? Any images in this space are removed permanently.`
+      )
+    ) {
+      return;
+    }
+    setShapeBusy(true);
+    try {
+      const res = await fetch(`/api/rooms/${toRemove.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(j.error ?? "Delete failed");
+      }
+      const list = await refreshData();
+      setSelectedId(list[0]?.id ?? null);
+    } catch {
+      /* optional toast */
+    } finally {
+      setShapeBusy(false);
+    }
+  };
 
   const displayRooms = editMode ? draftRooms : rooms;
 
@@ -56,6 +153,12 @@ export function BuildingShell({ initialRooms, initialFloorplan }: Props) {
     () => displayRooms.find((r) => r.id === selectedId) ?? null,
     [displayRooms, selectedId]
   );
+
+  const patchDraftRoom = useCallback((id: string, patch: Partial<Room>) => {
+    setDraftRooms((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, ...patch } : r))
+    );
+  }, []);
 
   const toggleEdit = () => {
     setEditMode((v) => {
@@ -96,15 +199,24 @@ export function BuildingShell({ initialRooms, initialFloorplan }: Props) {
   return (
     <div className="min-h-screen bg-[#070a0f] text-slate-200">
       <header className="border-b border-white/[0.06] bg-[#070a0f]/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-[1600px] items-start justify-between gap-4 px-4 py-4 sm:items-center sm:px-6">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+            <h1 className="font-display text-xl font-semibold tracking-tight text-white sm:text-2xl">
               Mt Barker Building
             </h1>
             <p className="mt-0.5 text-sm text-slate-500">
               Interactive campus floor plan & room galleries
             </p>
           </div>
+          {!showEditChrome && (
+            <button
+              type="button"
+              onClick={unlockLayoutTools}
+              className="shrink-0 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-100 hover:bg-amber-500/20"
+            >
+              Layout tools
+            </button>
+          )}
         </div>
       </header>
 
@@ -128,6 +240,7 @@ export function BuildingShell({ initialRooms, initialFloorplan }: Props) {
             editMode={editMode}
             onRoomsRefresh={refreshData}
             canPersist={canPersist}
+            onDraftRoomPatch={editMode ? patchDraftRoom : undefined}
           />
         </div>
       </main>
@@ -138,9 +251,14 @@ export function BuildingShell({ initialRooms, initialFloorplan }: Props) {
           selectedRoom={selectedRoom}
           draftRooms={draftRooms}
           saving={savingLayout}
+          shapeBusy={shapeBusy}
           onSaveLayout={() => void saveLayout()}
           onToggleEdit={toggleEdit}
           canPersist={canPersist}
+          onFloorplanUploaded={() => void refreshData()}
+          onAddRect={() => void addShape("rect")}
+          onAddPolygon={() => void addShape("polygon")}
+          onDeleteSelected={() => void deleteSelectedShape()}
         />
       )}
     </div>

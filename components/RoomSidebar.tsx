@@ -43,34 +43,37 @@ export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
         </h2>
         <p className="mt-1 text-sm text-slate-400">Select a room to inspect media.</p>
       </div>
-      <nav className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-y-auto lg:overflow-x-visible lg:pb-0">
+      <nav className="flex max-h-[min(50vh,24rem)] flex-col gap-2 overflow-y-auto pr-1 lg:max-h-[calc(100vh-10rem)]">
         {rooms.map((room) => {
           const active = room.id === selectedId;
+          const category = CATEGORY[room.slug] ?? "Zone";
           return (
             <button
               key={room.id}
               type="button"
               onClick={() => onSelect(room.id)}
               className={cn(
-                "flex min-w-[200px] shrink-0 items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition lg:min-w-0",
+                "flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition",
                 active
                   ? "border-white/20 bg-white/[0.07] ring-1 ring-white/10"
-                  : "border-transparent bg-transparent hover:border-white/[0.08] hover:bg-white/[0.04]"
+                  : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.05]"
               )}
             >
               <span
-                className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white/10"
+                className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white/15"
                 style={{ backgroundColor: room.color }}
                 aria-hidden
               />
-              <span className="min-w-0 flex-1">
-                <span className="block font-medium text-slate-100">{room.name}</span>
-                <span className="mt-0.5 block text-xs text-slate-500">
-                  {CATEGORY[room.slug] ?? "Zone"}
+              <span className="min-w-0 flex-1 text-left">
+                <span className="block font-medium leading-snug text-slate-100">
+                  {room.name}
+                </span>
+                <span className="mt-1 block text-xs leading-normal text-slate-500">
+                  {category}
                 </span>
                 <span
                   className={cn(
-                    "mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ring-inset",
+                    "mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium leading-none ring-1 ring-inset",
                     statusPill(room.status)
                   )}
                 >

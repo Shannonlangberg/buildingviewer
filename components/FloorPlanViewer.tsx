@@ -1,7 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Floorplan, Room } from "@/lib/types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  applyLayoutDragToRooms,
+  type LayoutPointerDragState,
+  svgClientToViewBox,
+} from "@/lib/floorplan-edit";
+import type { Floorplan, RectResizeHandleId, Room } from "@/lib/types";
+import { FloorPlanCanvas } from "./FloorPlanCanvas";
+import { PolygonVertexHandles } from "./PolygonVertexHandles";
+import { RectResizeHandles } from "./RectResizeHandles";
 import { RoomZoneOverlay } from "./RoomZoneOverlay";
 
 type Props = {
@@ -13,30 +21,6 @@ type Props = {
   onRoomsDirty?: (next: Room[]) => void;
 };
 
-type DragState =
-  | {
-      kind: "label" | "rect";
-      roomId: string;
-      startSvg: { x: number; y: number };
-      startRoom: Room;
-      pointerId: number;
-    }
-  | null;
-
-function svgPoint(
-  svg: SVGSVGElement,
-  clientX: number,
-  clientY: number
-): { x: number; y: number } {
-  const pt = svg.createSVGPoint();
-  pt.x = clientX;
-  pt.y = clientY;
-  const ctm = svg.getScreenCTM();
-  if (!ctm) return { x: 0, y: 0 };
-  const p = pt.matrixTransform(ctm.inverse());
-  return { x: p.x, y: p.y };
-}
-
 export function FloorPlanViewer({
   floorplan,
   rooms,
@@ -47,55 +31,28 @@ export function FloorPlanViewer({
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [drag, setDrag] = useState<DragState>(null);
+  const [drag, setDrag] = useState<LayoutPointerDragState | null>(null);
   const [draggingRoomId, setDraggingRoomId] = useState<string | null>(null);
   const movedRef = useRef(false);
 
-  const baseSrc = floorplan?.image_path ?? "/floorplans/mt-barker-base.svg";
-
-  const defs = useMemo(
-    () => (
-      <defs>
-        <filter id="zoneGlow" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="0.8" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-    ),
-    []
-  );
+  const defaultBase = "/floorplans/mt-barker-base.svg";
+  const selectedRoom =
+    rooms.find((r) => r.id === selectedId) ?? null;
 
   const applyDrag = useCallback(
     (clientX: number, clientY: number) => {
       if (!drag || !svgRef.current || !onRoomsDirty) return;
-      const cur = svgPoint(svgRef.current, clientX, clientY);
+      const cur = svgClientToViewBox(svgRef.current, clientX, clientY);
       const dx = cur.x - drag.startSvg.x;
       const dy = cur.y - drag.startSvg.y;
-      if (Math.hypot(dx, dy) > 0.2) movedRef.current = true;
-
-      const next = rooms.map((r) => {
-        if (r.id !== drag.roomId) return r;
-        if (drag.kind === "label") {
-          return {
-            ...r,
-            label_x: Number((drag.startRoom.label_x + dx).toFixed(2)),
-            label_y: Number((drag.startRoom.label_y + dy).toFixed(2)),
-          };
-        }
-        if (r.shape_type !== "rect") return r;
-        return {
-          ...r,
-          rect_x: Number(
-            ((drag.startRoom.rect_x ?? 0) + dx).toFixed(2)
-          ),
-          rect_y: Number(
-            ((drag.startRoom.rect_y ?? 0) + dy).toFixed(2)
-          ),
-        };
-      });
+      if (Math.hypot(dx, dy) > 0.08) movedRef.current = true;
+      const next = applyLayoutDragToRooms(
+        rooms,
+        drag,
+        clientX,
+        clientY,
+        svgRef.current
+      );
       onRoomsDirty(next);
     },
     [drag, onRoomsDirty, rooms]
@@ -122,40 +79,119 @@ export function FloorPlanViewer({
     };
   }, [drag, applyDrag]);
 
-  const onRectPointerDown = (roomId: string, e: React.PointerEvent) => {
+  const beginDrag = (
+    next: LayoutPointerDragState,
+    target: Element,
+    e: React.PointerEvent
+  ) => {
+    movedRef.current = false;
+    target.setPointerCapture?.(e.pointerId);
+    setDraggingRoomId(next.roomId);
+    setDrag(next);
+  };
+
+  const onPolygonMovePointerDown = (roomId: string, e: React.PointerEvent) => {
     if (!editMode || !onRoomsDirty || !svgRef.current) return;
     e.stopPropagation();
     e.preventDefault();
-    movedRef.current = false;
+    const room = rooms.find((r) => r.id === roomId);
+    if (!room || room.shape_type !== "polygon") return;
+    const startSvg = svgClientToViewBox(svgRef.current, e.clientX, e.clientY);
+    beginDrag(
+      {
+        kind: "polygon-move",
+        roomId,
+        startSvg,
+        startRoom: { ...room },
+        pointerId: e.pointerId,
+      },
+      e.target as Element,
+      e
+    );
+  };
+
+  const onRectMovePointerDown = (roomId: string, e: React.PointerEvent) => {
+    if (!editMode || !onRoomsDirty || !svgRef.current) return;
+    e.stopPropagation();
+    e.preventDefault();
     const room = rooms.find((r) => r.id === roomId);
     if (!room || room.shape_type !== "rect") return;
-    const startSvg = svgPoint(svgRef.current, e.clientX, e.clientY);
-    (e.target as Element).setPointerCapture?.(e.pointerId);
-    setDraggingRoomId(roomId);
-    setDrag({
-      kind: "rect",
-      roomId,
-      startSvg,
-      startRoom: { ...room },
-      pointerId: e.pointerId,
-    });
+    const startSvg = svgClientToViewBox(svgRef.current, e.clientX, e.clientY);
+    beginDrag(
+      {
+        kind: "rect-move",
+        roomId,
+        startSvg,
+        startRoom: { ...room },
+        pointerId: e.pointerId,
+      },
+      e.target as Element,
+      e
+    );
+  };
+
+  const onPolygonVertexPointerDown = (
+    roomId: string,
+    vertexIndex: number,
+    e: React.PointerEvent
+  ) => {
+    if (!editMode || !onRoomsDirty || !svgRef.current) return;
+    const room = rooms.find((r) => r.id === roomId);
+    if (!room || room.shape_type !== "polygon") return;
+    const startSvg = svgClientToViewBox(svgRef.current, e.clientX, e.clientY);
+    beginDrag(
+      {
+        kind: "polygon-vertex",
+        roomId,
+        vertexIndex,
+        startSvg,
+        startRoom: { ...room },
+        pointerId: e.pointerId,
+      },
+      e.target as Element,
+      e
+    );
+  };
+
+  const onResizePointerDown = (
+    roomId: string,
+    handle: RectResizeHandleId,
+    e: React.PointerEvent
+  ) => {
+    if (!editMode || !onRoomsDirty || !svgRef.current) return;
+    const room = rooms.find((r) => r.id === roomId);
+    if (!room || room.shape_type !== "rect") return;
+    const startSvg = svgClientToViewBox(svgRef.current, e.clientX, e.clientY);
+    beginDrag(
+      {
+        kind: "rect-resize",
+        roomId,
+        handle,
+        startSvg,
+        startRoom: { ...room },
+        pointerId: e.pointerId,
+      },
+      e.target as Element,
+      e
+    );
   };
 
   const onLabelPointerDown = (room: Room, e: React.PointerEvent) => {
     if (!editMode || !onRoomsDirty || !svgRef.current) return;
     e.stopPropagation();
     e.preventDefault();
-    movedRef.current = false;
-    const startSvg = svgPoint(svgRef.current, e.clientX, e.clientY);
-    (e.target as Element).setPointerCapture?.(e.pointerId);
-    setDraggingRoomId(room.id);
-    setDrag({
-      kind: "label",
-      roomId: room.id,
-      startSvg,
-      startRoom: { ...room },
-      pointerId: e.pointerId,
-    });
+    const startSvg = svgClientToViewBox(svgRef.current, e.clientX, e.clientY);
+    beginDrag(
+      {
+        kind: "label",
+        roomId: room.id,
+        startSvg,
+        startRoom: { ...room },
+        pointerId: e.pointerId,
+      },
+      e.target as Element,
+      e
+    );
   };
 
   const handleZoneClick = (id: string) => {
@@ -169,30 +205,11 @@ export function FloorPlanViewer({
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0e14] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
       <div className="relative aspect-[4/3] w-full">
-        <svg
-          ref={svgRef}
-          viewBox="0 0 100 100"
-          className="absolute inset-0 h-full w-full touch-none select-none"
-          preserveAspectRatio="xMidYMid meet"
-          role="img"
-          aria-label="Interactive floor plan"
+        <FloorPlanCanvas
+          floorplan={floorplan}
+          fallbackImageSrc={defaultBase}
+          svgRef={svgRef}
         >
-          {defs}
-          {floorplan?.svg_content ? (
-            <g
-              dangerouslySetInnerHTML={{ __html: floorplan.svg_content }}
-              className="opacity-[0.55]"
-            />
-          ) : (
-            <image
-              href={baseSrc}
-              width={100}
-              height={100}
-              preserveAspectRatio="xMidYMid meet"
-              className="opacity-[0.55]"
-            />
-          )}
-
           <RoomZoneOverlay
             rooms={rooms}
             selectedId={selectedId}
@@ -201,7 +218,8 @@ export function FloorPlanViewer({
             onSelect={handleZoneClick}
             onHover={setHoveredId}
             draggingRoomId={draggingRoomId}
-            onRectPointerDown={onRectPointerDown}
+            onRectMovePointerDown={onRectMovePointerDown}
+            onPolygonMovePointerDown={onPolygonMovePointerDown}
           />
 
           {rooms.map((room) => (
@@ -212,6 +230,8 @@ export function FloorPlanViewer({
               textAnchor="middle"
               fill="rgba(248,250,252,0.92)"
               style={{
+                fontFamily:
+                  "var(--font-body), system-ui, -apple-system, sans-serif",
                 fontSize: "2.1px",
                 fontWeight: 600,
                 pointerEvents: editMode ? "auto" : "none",
@@ -223,6 +243,18 @@ export function FloorPlanViewer({
               {room.name}
             </text>
           ))}
+
+          <RectResizeHandles
+            room={selectedRoom}
+            visible={editMode && Boolean(onRoomsDirty)}
+            onResizePointerDown={onResizePointerDown}
+          />
+
+          <PolygonVertexHandles
+            room={selectedRoom}
+            visible={editMode && Boolean(onRoomsDirty)}
+            onVertexPointerDown={onPolygonVertexPointerDown}
+          />
 
           <g transform="translate(88 8)">
             <circle
@@ -245,7 +277,7 @@ export function FloorPlanViewer({
               N
             </text>
           </g>
-        </svg>
+        </FloorPlanCanvas>
       </div>
     </div>
   );

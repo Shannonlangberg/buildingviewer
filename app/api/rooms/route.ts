@@ -1,5 +1,7 @@
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { getRooms } from "@/lib/data";
+import { buildNewRoomRow } from "@/lib/room-defaults";
 import { createServiceSupabase } from "@/lib/supabase";
 import type { Room } from "@/lib/types";
 
@@ -32,6 +34,56 @@ type PatchBody = {
     > & { id: string }
   >;
 };
+
+type PostBody = {
+  shape_type?: "rect" | "polygon";
+  name?: string;
+};
+
+export async function POST(request: Request) {
+  try {
+    const supabase = createServiceSupabase();
+    const body = (await request.json()) as PostBody;
+    const shape_type = body.shape_type === "polygon" ? "polygon" : "rect";
+    const baseName =
+      body.name?.trim() ||
+      (shape_type === "polygon" ? "New polygon" : "New zone");
+
+    const { data: maxRow } = await supabase
+      .from("rooms")
+      .select("sort_order")
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const sort_order = (maxRow?.sort_order ?? 0) + 1;
+    const id = randomUUID();
+    const slug = `zone-${id.replace(/-/g, "").slice(0, 12)}`;
+
+    const row = buildNewRoomRow({
+      id,
+      slug,
+      name: baseName,
+      shape_type,
+      sort_order,
+    });
+
+    const { data: inserted, error } = await supabase
+      .from("rooms")
+      .insert(row)
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json({ room: inserted as Room });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json(
+      { error: "Create failed. Is SUPABASE_SERVICE_ROLE_KEY set?" },
+      { status: 503 }
+    );
+  }
+}
 
 export async function PATCH(request: Request) {
   try {

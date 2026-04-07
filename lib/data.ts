@@ -4,29 +4,39 @@ import type { Floorplan, Room, RoomImage } from "./types";
 
 export async function getActiveFloorplan(): Promise<Floorplan | null> {
   if (!isSupabaseConfigured()) return MOCK_FLOORPLAN;
-  const supabase = createServerAnonSupabase();
-  if (!supabase) return MOCK_FLOORPLAN;
-  const { data, error } = await supabase
-    .from("floorplans")
-    .select("*")
-    .eq("is_active", true)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error || !data) return MOCK_FLOORPLAN;
-  return data as Floorplan;
+  try {
+    const supabase = createServerAnonSupabase();
+    if (!supabase) return MOCK_FLOORPLAN;
+    const { data, error } = await supabase
+      .from("floorplans")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data) return MOCK_FLOORPLAN;
+    return data as Floorplan;
+  } catch (e) {
+    console.error("getActiveFloorplan:", e);
+    return MOCK_FLOORPLAN;
+  }
 }
 
 export async function getRooms(): Promise<Room[]> {
   if (!isSupabaseConfigured()) return MOCK_ROOMS;
-  const supabase = createServerAnonSupabase();
-  if (!supabase) return MOCK_ROOMS;
-  const { data, error } = await supabase
-    .from("rooms")
-    .select("*")
-    .order("sort_order", { ascending: true });
-  if (error || !data?.length) return MOCK_ROOMS;
-  return data as Room[];
+  try {
+    const supabase = createServerAnonSupabase();
+    if (!supabase) return MOCK_ROOMS;
+    const { data, error } = await supabase
+      .from("rooms")
+      .select("*")
+      .order("sort_order", { ascending: true });
+    if (error || !data?.length) return MOCK_ROOMS;
+    return data as Room[];
+  } catch (e) {
+    console.error("getRooms:", e);
+    return MOCK_ROOMS;
+  }
 }
 
 export async function getRoomImages(roomId: string): Promise<RoomImage[]> {

@@ -80,6 +80,8 @@ type Props = {
   editMode: boolean;
   onRoomsRefresh: () => void;
   canPersist: boolean;
+  /** While layout editing, push name/status/colour into draft rooms so the map preview updates. */
+  onDraftRoomPatch?: (id: string, patch: Partial<Room>) => void;
 };
 
 export function RoomDetailPanel({
@@ -87,6 +89,7 @@ export function RoomDetailPanel({
   editMode,
   onRoomsRefresh,
   canPersist,
+  onDraftRoomPatch,
 }: Props) {
   const [images, setImages] = useState<RoomImage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -407,6 +410,11 @@ export function RoomDetailPanel({
         visible={editMode}
         onSaved={onRoomsRefresh}
         canPersist={canPersist}
+        onDraftChange={
+          room && onDraftRoomPatch
+            ? (patch) => onDraftRoomPatch(room.id, patch)
+            : undefined
+        }
       />
     </section>
   );

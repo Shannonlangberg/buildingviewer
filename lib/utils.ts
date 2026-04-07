@@ -20,6 +20,15 @@ export function parsePolygonPoints(
   return pts.length >= 3 ? pts : null;
 }
 
+/** Space-separated "x,y" pairs for `rooms.polygon_points`. */
+export function serializePolygonPoints(
+  pts: { x: number; y: number }[]
+): string {
+  return pts
+    .map((p) => `${Number(p.x.toFixed(2))},${Number(p.y.toFixed(2))}`)
+    .join(" ");
+}
+
 export function formatUploadDate(iso: string) {
   try {
     return new Intl.DateTimeFormat("en-AU", {
