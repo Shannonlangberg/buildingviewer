@@ -44,10 +44,10 @@ function roomButtonStyle(active: boolean): CSSProperties {
     font: "inherit",
     color: "inherit",
     border: active
-      ? "1px solid rgba(255,255,255,0.2)"
+      ? "1px solid rgba(249, 115, 22, 0.35)"
       : "1px solid rgba(255,255,255,0.06)",
     background: active
-      ? "rgba(255,255,255,0.07)"
+      ? "rgba(249, 115, 22, 0.14)"
       : "rgba(255,255,255,0.02)",
   };
 }
@@ -65,9 +65,9 @@ function statusPillInline(status: Room["status"]): CSSProperties {
       boxShadow: "inset 0 0 0 1px rgba(14, 165, 233, 0.22)",
     },
     confirmed: {
-      background: "rgba(16, 185, 129, 0.12)",
-      color: "rgba(167, 243, 208, 0.95)",
-      boxShadow: "inset 0 0 0 1px rgba(16, 185, 129, 0.22)",
+      background: "rgba(20, 184, 166, 0.14)",
+      color: "rgba(153, 246, 228, 0.95)",
+      boxShadow: "inset 0 0 0 1px rgba(45, 212, 191, 0.28)",
     },
   } as const;
   return {
@@ -92,24 +92,24 @@ type Props = {
 export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
   return (
     <aside
-      className="flex flex-col gap-3 rounded-2xl border border-white/[0.09] bg-white/[0.04] p-5 shadow-xl shadow-black/25 ring-1 ring-white/[0.05] backdrop-blur-xl lg:min-h-0 lg:max-h-[calc(100vh-8rem)]"
+      className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-app-panel p-5 shadow-lg shadow-black/40 lg:min-h-0 lg:max-h-[calc(100vh-8rem)]"
       style={{
         display: "flex",
         flexDirection: "column",
         gap: 12,
         borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.09)",
-        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        background: "#1a1d26",
         padding: 20,
         boxSizing: "border-box",
       }}
     >
       <div>
-        <h2 className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-          Spaces
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500">
+          Rooms
         </h2>
-        <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
-          Select a room to inspect media.
+        <p className="mt-1.5 text-sm leading-relaxed text-gray-500">
+          Select a room to view its gallery.
         </p>
       </div>
       <nav
@@ -128,8 +128,8 @@ export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
               className={cn(
                 "transition duration-200",
                 active
-                  ? "ring-1 ring-cyan-400/20 shadow-md shadow-black/20"
-                  : "hover:border-white/[0.14] hover:bg-white/[0.06]"
+                  ? "shadow-md shadow-black/30 ring-1 ring-orange-500/25"
+                  : "hover:border-white/10 hover:bg-white/[0.04]"
               )}
             >
               <span
@@ -147,19 +147,19 @@ export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
               />
               <div className="min-w-0 flex-1 text-left" style={{ minWidth: 0, flex: 1 }}>
                 <div
-                  className="font-medium leading-snug text-slate-100"
-                  style={{ display: "block", fontWeight: 600, color: "#f1f5f9" }}
+                  className="font-semibold leading-snug text-gray-100"
+                  style={{ display: "block", fontWeight: 600, color: "#f3f4f6" }}
                 >
                   {room.name}
                 </div>
                 <div
-                  className="mt-1 text-xs leading-normal text-slate-500"
+                  className="mt-1 text-xs leading-normal text-gray-500"
                   style={{
                     display: "block",
                     marginTop: 4,
                     fontSize: 12,
                     lineHeight: 1.45,
-                    color: "#64748b",
+                    color: "#6b7280",
                   }}
                 >
                   {category}

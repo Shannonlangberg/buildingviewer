@@ -190,7 +190,7 @@ function LayoutLiveReadout({
             type="text"
             value={room.name}
             onChange={(e) => onNameDraft(e.target.value)}
-            className="w-full rounded-lg border border-white/15 bg-white/[0.06] px-2 py-1.5 text-[11px] text-slate-100 outline-none focus:ring-1 focus:ring-sky-500/40"
+            className="w-full rounded-lg border border-white/15 bg-app-inset px-2 py-1.5 text-[11px] text-gray-100 outline-none focus:ring-1 focus:ring-orange-500/35"
             style={{ fontFamily: "inherit" }}
             autoComplete="off"
             placeholder="Name shown on the floor plan"
@@ -241,7 +241,7 @@ function LayoutLiveReadout({
             type="button"
             disabled={!canPersist || roomColorSaving}
             onClick={() => void onSaveRoomColor()}
-            className="rounded-md border border-sky-500/35 bg-sky-500/10 px-2 py-1 text-[10px] font-medium text-sky-100 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md border border-orange-500/35 bg-orange-500/10 px-2 py-1 text-[10px] font-medium text-orange-100 hover:bg-orange-500/20 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {roomColorSaving ? "Saving…" : "Save zone colour"}
           </button>
@@ -266,7 +266,7 @@ function LayoutLiveReadout({
               value={room.label_text_color ?? ""}
               onChange={(e) => onLabelTextColorDraft(e.target.value)}
               spellCheck={false}
-              className="min-w-[6rem] max-w-[10rem] rounded-md border border-white/15 bg-white/[0.06] px-2 py-1 font-mono text-[10px] text-slate-200 outline-none focus:ring-1 focus:ring-violet-500/40"
+              className="min-w-[6rem] max-w-[10rem] rounded-md border border-white/15 bg-app-inset px-2 py-1 font-mono text-[10px] text-gray-200 outline-none focus:ring-1 focus:ring-orange-500/35"
               title="Any CSS colour, e.g. #fff or rgba(255,255,255,0.9)"
               placeholder={DEFAULT_LABEL_TEXT_COLOR}
             />
@@ -289,8 +289,8 @@ function LayoutLiveReadout({
               }
               className={cn(
                 "h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10",
-                "[&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-violet-400",
-                "[&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:cursor-grab [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-violet-400"
+                "[&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-400",
+                "[&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:cursor-grab [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-orange-400"
               )}
               aria-label="Label text size on plan"
             />
@@ -305,7 +305,7 @@ function LayoutLiveReadout({
             onClick={() =>
               void onSaveLabelStyle()
             }
-            className="rounded-md border border-violet-500/35 bg-violet-500/10 px-2 py-1 text-[10px] font-medium text-violet-100 hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md border border-white/20 bg-app-raised px-2 py-1 text-[10px] font-medium text-gray-100 hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {labelStyleSaving ? "Saving…" : "Save label look"}
           </button>
@@ -384,18 +384,18 @@ export function FloorPlanEditor({
 
   return (
     <div
-      className="mb-6 w-full rounded-2xl border border-white/[0.10] bg-white/[0.05] p-4 text-xs text-slate-300 shadow-xl shadow-black/25 ring-1 ring-white/[0.06] backdrop-blur-2xl backdrop-saturate-150 sm:p-5"
+      className="mb-6 w-full rounded-2xl border border-white/10 bg-app-panel p-4 text-xs text-gray-300 shadow-lg shadow-black/40 sm:p-5"
       role="complementary"
       aria-label="Layout editor"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-md bg-amber-500/15 px-2 py-0.5 font-semibold uppercase tracking-wider text-amber-200/90">
+        <span className="rounded-md bg-orange-500/15 px-2 py-0.5 font-semibold uppercase tracking-wider text-orange-200/95 ring-1 ring-orange-500/25">
           Layout edit
         </span>
         <button
           type="button"
           onClick={onToggleEdit}
-          className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-1.5 font-medium text-slate-100 hover:bg-white/[0.1]"
+          className="rounded-lg border border-white/15 bg-app-inset px-3 py-1.5 font-medium text-gray-100 hover:border-white/25 hover:bg-app-raised"
         >
           {editMode ? "Exit edit" : "Edit layout"}
         </button>
@@ -404,7 +404,7 @@ export function FloorPlanEditor({
             type="button"
             disabled={!canPersist || saving}
             onClick={onSaveLayout}
-            className="rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-3 py-1.5 font-medium text-emerald-100 hover:bg-emerald-500/25 disabled:opacity-40"
+            className="rounded-lg border border-emerald-600/40 bg-emerald-900/40 px-3 py-1.5 font-medium text-emerald-100 hover:bg-emerald-800/50 disabled:opacity-40"
           >
             {saving ? "Saving…" : "Save to Supabase"}
           </button>
@@ -427,7 +427,7 @@ export function FloorPlanEditor({
                   type="button"
                   disabled={!canPersist || shapeBusy || saving}
                   onClick={onAddRect}
-                  className="rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-[11px] font-medium text-slate-100 hover:bg-white/[0.1] disabled:opacity-40"
+                  className="rounded-lg border border-white/15 bg-app-inset px-2.5 py-1.5 text-[11px] font-medium text-gray-100 hover:border-white/25 hover:bg-app-raised disabled:opacity-40"
                 >
                   + Rectangle
                 </button>
@@ -435,7 +435,7 @@ export function FloorPlanEditor({
                   type="button"
                   disabled={!canPersist || shapeBusy || saving}
                   onClick={onAddPolygon}
-                  className="rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-[11px] font-medium text-slate-100 hover:bg-white/[0.1] disabled:opacity-40"
+                  className="rounded-lg border border-white/15 bg-app-inset px-2.5 py-1.5 text-[11px] font-medium text-gray-100 hover:border-white/25 hover:bg-app-raised disabled:opacity-40"
                 >
                   + Polygon
                 </button>
@@ -464,8 +464,10 @@ export function FloorPlanEditor({
               <span className="text-slate-400">Upload base floor plan</span> if
               you like.{" "}
               <span className="font-medium text-slate-400">Polygons:</span> drag
-              <span className="text-slate-400"> corners</span> to reshape, or
-              the fill to move the whole zone.{" "}
+              <span className="text-slate-400"> corners</span> to reshape;{" "}
+              <span className="text-slate-400">double-click an edge</span> to add
+              a corner; <span className="text-slate-400">Alt-click a corner</span>{" "}
+              to remove (min 3). Drag the fill to move the whole zone.{" "}
               <span className="text-slate-400">Save layout</span> for positions;
               <span className="text-slate-400"> Save label</span> for the name;{" "}
               <span className="text-slate-400">Save label look</span> for text
@@ -495,8 +497,8 @@ export function FloorPlanEditor({
                   }
                   className={cn(
                     "mt-2 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10",
-                    "[&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-sky-400 [&::-webkit-slider-thumb]:shadow-md",
-                    "[&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:cursor-grab [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-sky-400"
+                    "[&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gray-400 [&::-webkit-slider-thumb]:shadow-md",
+                    "[&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:cursor-grab [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-gray-400"
                   )}
                   aria-valuemin={0}
                   aria-valuemax={100}

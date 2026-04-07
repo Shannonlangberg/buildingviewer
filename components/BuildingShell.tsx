@@ -327,36 +327,43 @@ export function BuildingShell({
   };
 
   return (
-    <div
-      className="relative min-h-screen text-slate-200"
-      style={{
-        background:
-          "radial-gradient(ellipse 100% 75% at 50% -28%, rgba(34, 211, 238, 0.11), transparent 52%), radial-gradient(ellipse 55% 45% at 100% 0%, rgba(124, 58, 237, 0.09), transparent 50%), radial-gradient(ellipse 50% 38% at 0% 92%, rgba(14, 165, 233, 0.06), transparent 42%), #060912",
-      }}
-    >
-      <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#060912]/70 backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-[#060912]/45">
-        <div className="mx-auto flex max-w-[1600px] items-start justify-between gap-4 px-4 py-5 sm:items-center sm:px-6">
-          <div>
-            <h1 className="font-display text-xl font-semibold tracking-tight text-white sm:text-[1.65rem] sm:leading-tight">
+    <div className="flex min-h-screen flex-col bg-app-bg text-gray-200">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-app-header">
+        <div className="relative mx-auto flex h-[3.25rem] max-w-[1600px] items-center justify-between px-4 sm:h-14 sm:px-6">
+          <div
+            className="flex w-24 shrink-0 items-center gap-1.5 text-gray-600 sm:w-28"
+            aria-hidden
+          >
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-app-panel text-[10px] font-medium text-gray-500">
+              ⌂
+            </span>
+            <span className="hidden rounded-lg border border-white/10 bg-app-panel px-2 py-1.5 text-[10px] font-medium text-gray-500 sm:inline">
+              View
+            </span>
+          </div>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+            <h1 className="pointer-events-auto text-[0.95rem] font-semibold tracking-tight text-white sm:text-lg">
               Mt Barker Building
             </h1>
-            <p className="mt-1 max-w-md text-sm leading-relaxed text-slate-400">
-              Interactive campus floor plan & room galleries
+            <p className="hidden text-[11px] text-gray-500 sm:block">
+              Floor plan & room galleries
             </p>
           </div>
-          {!showEditChrome && (
-            <button
-              type="button"
-              onClick={unlockLayoutTools}
-              className="shrink-0 rounded-full border border-white/[0.12] bg-white/[0.06] px-4 py-2 text-xs font-semibold text-slate-100 shadow-lg shadow-cyan-500/[0.06] ring-1 ring-white/[0.06] transition hover:border-amber-400/30 hover:bg-amber-500/10 hover:text-amber-50 hover:shadow-amber-500/10"
-            >
-              Layout tools
-            </button>
-          )}
+          <div className="flex w-24 shrink-0 justify-end sm:w-28">
+            {!showEditChrome && (
+              <button
+                type="button"
+                onClick={unlockLayoutTools}
+                className="rounded-xl border border-white/15 bg-app-panel px-3 py-2 text-xs font-medium text-gray-200 shadow-sm transition hover:border-white/25 hover:bg-app-raised"
+              >
+                Layout tools
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
+      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6 sm:py-8">
         {showEditChrome && (
           <FloorPlanEditor
             editMode={editMode}
@@ -423,6 +430,14 @@ export function BuildingShell({
           />
         </div>
       </main>
+
+      <footer className="mt-auto border-t border-white/10 bg-app-header py-3 sm:py-4">
+        <div className="mx-auto flex max-w-[1600px] flex-col items-center justify-center gap-1 px-4 text-center text-[11px] text-gray-500 sm:flex-row sm:gap-3">
+          <span>© {new Date().getFullYear()} Mt Barker Building</span>
+          <span className="hidden text-white/15 sm:inline">·</span>
+          <span>Campus viewer</span>
+        </div>
+      </footer>
     </div>
   );
 }

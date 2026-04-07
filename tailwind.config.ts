@@ -16,6 +16,12 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        /** Reference-style dashboard (charcoal panels on darker canvas) */
+        "app-bg": "#0f1117",
+        "app-panel": "#1a1d26",
+        "app-raised": "#22262f",
+        "app-header": "#16181f",
+        "app-inset": "#14161f",
       },
     },
   },

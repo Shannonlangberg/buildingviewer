@@ -88,7 +88,7 @@ export function FloorplanBaseUpload({
           className={
             disabled || busy
               ? "cursor-not-allowed rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-slate-500 opacity-60"
-              : "cursor-pointer rounded-lg border border-sky-500/35 bg-sky-500/10 px-3 py-1.5 text-[11px] font-medium text-sky-100 hover:bg-sky-500/20"
+              : "cursor-pointer rounded-lg border border-white/15 bg-app-inset px-3 py-1.5 text-[11px] font-medium text-gray-200 hover:border-orange-500/35 hover:bg-orange-500/10"
           }
           title={
             disabled

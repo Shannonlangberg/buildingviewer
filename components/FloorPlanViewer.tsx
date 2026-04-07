@@ -10,8 +10,11 @@ import {
   effectiveLabelFill,
   effectiveLabelFontSize,
 } from "@/lib/room-label-style";
+import { removePolygonVertex } from "@/lib/polygon-edit";
 import type { Floorplan, RectResizeHandleId, Room } from "@/lib/types";
+import { parsePolygonPoints, serializePolygonPoints } from "@/lib/utils";
 import { FloorPlanCanvas } from "./FloorPlanCanvas";
+import { PolygonEdgeInsertHandles } from "./PolygonEdgeInsertHandles";
 import { PolygonVertexHandles } from "./PolygonVertexHandles";
 import { RectResizeHandles } from "./RectResizeHandles";
 import { RoomZoneOverlay } from "./RoomZoneOverlay";
@@ -145,6 +148,25 @@ export function FloorPlanViewer({
     if (!editMode || !onRoomsDirty || !svgRef.current) return;
     const room = rooms.find((r) => r.id === roomId);
     if (!room || room.shape_type !== "polygon") return;
+
+    if (e.altKey) {
+      const parsed = parsePolygonPoints(room.polygon_points);
+      const nextPts =
+        parsed && removePolygonVertex(parsed, vertexIndex);
+      if (nextPts) {
+        e.preventDefault();
+        e.stopPropagation();
+        onRoomsDirty(
+          rooms.map((r) =>
+            r.id === roomId
+              ? { ...r, polygon_points: serializePolygonPoints(nextPts) }
+              : r
+          )
+        );
+      }
+      return;
+    }
+
     const startSvg = svgClientToViewBox(svgRef.current, e.clientX, e.clientY);
     beginDrag(
       {
@@ -211,22 +233,20 @@ export function FloorPlanViewer({
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl border border-white/[0.10] bg-gradient-to-b from-white/[0.05] via-[#0a1018] to-[#070b11] shadow-2xl shadow-black/30 ring-1 ring-white/[0.06] backdrop-blur-sm"
+      className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-app-panel shadow-lg shadow-black/50"
       style={{
         position: "relative",
         width: "100%",
         overflow: "hidden",
         borderRadius: 16,
         border: "1px solid rgba(255,255,255,0.10)",
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, #0a1018 45%, #070b11 100%)",
+        background: "#1a1d26",
         boxSizing: "border-box",
-        boxShadow:
-          "inset 0 1px 0 rgba(255,255,255,0.06), 0 24px 48px rgba(0,0,0,0.35)",
+        boxShadow: "0 16px 40px rgba(0,0,0,0.45)",
       }}
     >
       <div
-        className="relative aspect-[4/3] w-full"
+        className="relative aspect-[4/3] w-full bg-app-bg"
         style={{ position: "relative", width: "100%", aspectRatio: "4 / 3" }}
       >
         <FloorPlanCanvas
@@ -246,6 +266,15 @@ export function FloorPlanViewer({
             onRectMovePointerDown={onRectMovePointerDown}
             onPolygonMovePointerDown={onPolygonMovePointerDown}
           />
+
+          {editMode && onRoomsDirty && (
+            <PolygonEdgeInsertHandles
+              room={selectedRoom}
+              svgRef={svgRef}
+              rooms={rooms}
+              onRoomsDirty={onRoomsDirty}
+            />
+          )}
 
           {rooms.map((room) => (
             <text

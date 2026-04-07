@@ -38,7 +38,7 @@ function statusPill(status: Room["status"]) {
   const map = {
     pending: "bg-amber-500/15 text-amber-200/90 ring-amber-500/25",
     in_progress: "bg-sky-500/15 text-sky-200/90 ring-sky-500/25",
-    confirmed: "bg-emerald-500/15 text-emerald-200/90 ring-emerald-500/25",
+    confirmed: "bg-teal-500/15 text-teal-200/90 ring-teal-500/30",
   } as const;
   return map[status];
 }
@@ -68,7 +68,7 @@ function SortableThumb({
       style={style}
       className={cn(
         "relative touch-none rounded-lg ring-2 ring-transparent",
-        isDragging && "z-10 opacity-90 ring-sky-400/50"
+        isDragging && "z-10 opacity-90 ring-orange-400/45"
       )}
       {...attributes}
       {...listeners}
@@ -252,8 +252,8 @@ export function RoomDetailPanel({
 
   if (!room) {
     return (
-      <section className="flex min-h-[240px] flex-col justify-center rounded-2xl border border-white/[0.09] bg-white/[0.04] p-8 text-center shadow-xl shadow-black/20 ring-1 ring-white/[0.05] backdrop-blur-xl">
-        <p className="text-sm leading-relaxed text-slate-500">
+      <section className="flex min-h-[240px] flex-col justify-center rounded-2xl border border-white/10 bg-app-panel p-8 text-center shadow-lg shadow-black/40">
+        <p className="text-sm leading-relaxed text-gray-500">
           Choose a room to view its gallery.
         </p>
       </section>
@@ -266,22 +266,17 @@ export function RoomDetailPanel({
   return (
     <section
       className={cn(
-        "flex flex-col gap-5 rounded-2xl p-5 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto",
-        sleekGallery
-          ? "border border-white/[0.14] bg-white/[0.06] shadow-[0_12px_48px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-white/[0.08]"
-          : "border border-white/[0.09] bg-white/[0.04] shadow-lg shadow-black/20 ring-1 ring-white/[0.05] backdrop-blur-xl"
+        "flex flex-col gap-5 rounded-2xl border border-white/10 bg-app-panel p-5 shadow-lg shadow-black/40 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto",
+        sleekGallery && "ring-1 ring-white/[0.06]"
       )}
     >
       <header
         className={cn(
-          "flex flex-wrap items-start justify-between gap-2 pb-3",
-          sleekGallery
-            ? "border-b border-white/15"
-            : "border-b border-white/[0.06]"
+          "flex flex-wrap items-start justify-between gap-2 border-b border-white/10 pb-3"
         )}
       >
         <div>
-          <h2 className="font-display text-lg font-semibold tracking-tight text-white sm:text-xl">
+          <h2 className="text-lg font-semibold tracking-tight text-white sm:text-xl">
             {room.name}
           </h2>
           <span
@@ -296,10 +291,8 @@ export function RoomDetailPanel({
         {canPersist && (
           <div
             className={cn(
-              "flex shrink-0 rounded-full p-0.5 ring-1",
-              presentGallery
-                ? "bg-white/[0.08] ring-white/[0.12] backdrop-blur-md"
-                : "bg-black/40 ring-white/[0.08]"
+              "flex shrink-0 rounded-full border border-white/10 bg-app-inset p-0.5",
+              presentGallery ? "ring-1 ring-white/10" : ""
             )}
             role="group"
             aria-label="Gallery view mode"
@@ -310,8 +303,8 @@ export function RoomDetailPanel({
               className={cn(
                 "rounded-full px-3 py-1.5 text-[11px] font-semibold transition duration-200",
                 presentGallery
-                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white/10 text-white ring-1 ring-white/15"
+                  : "text-gray-500 hover:text-gray-200"
               )}
             >
               Present
@@ -322,8 +315,8 @@ export function RoomDetailPanel({
               className={cn(
                 "rounded-full px-3 py-1.5 text-[11px] font-semibold transition duration-200",
                 !presentGallery
-                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white/10 text-white ring-1 ring-white/15"
+                  : "text-gray-500 hover:text-gray-200"
               )}
             >
               Edit gallery
@@ -352,18 +345,15 @@ export function RoomDetailPanel({
       <div className="space-y-2">
         <h3
           className={cn(
-            "text-xs font-semibold uppercase tracking-wider",
-            sleekGallery ? "text-slate-400" : "text-slate-500"
+            "text-xs font-semibold uppercase tracking-wider text-gray-500"
           )}
         >
           Hero preview
         </h3>
         <div
           className={cn(
-            "relative aspect-video w-full overflow-hidden",
-            sleekGallery
-              ? "rounded-2xl border border-white/15 bg-white/[0.04] shadow-inner ring-1 ring-white/10 backdrop-blur-md"
-              : "rounded-xl border border-white/[0.08] bg-black/40"
+            "relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-app-inset",
+            sleekGallery && "rounded-2xl"
           )}
         >
           {loading && (
@@ -381,7 +371,7 @@ export function RoomDetailPanel({
               <button
                 type="button"
                 onClick={() => openPresentationFor(hero)}
-                className="absolute inset-0 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0e14]"
+                className="absolute inset-0 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-app-inset"
                 aria-label="Open image in presentation view"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -399,7 +389,7 @@ export function RoomDetailPanel({
                 href={heroUrl ?? "#"}
                 target="_blank"
                 rel="noreferrer"
-                className="text-sm text-sky-300 hover:underline"
+                className="text-sm text-gray-400 underline-offset-2 hover:text-orange-300 hover:underline"
               >
                 Open in new tab
               </a>
@@ -451,7 +441,7 @@ export function RoomDetailPanel({
                   rows={2}
                   maxLength={2000}
                   placeholder="Short description shown in the gallery…"
-                  className="mt-1.5 w-full resize-y rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:border-sky-500/40 focus:outline-none focus:ring-1 focus:ring-sky-500/30"
+                  className="mt-1.5 w-full resize-y rounded-lg border border-white/10 bg-app-bg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:border-orange-500/35 focus:outline-none focus:ring-1 focus:ring-orange-500/25"
                 />
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <button
@@ -475,7 +465,7 @@ export function RoomDetailPanel({
                       heroCaptionSaving ||
                         heroCaptionDraft === (hero.caption ?? "")
                         ? "cursor-not-allowed bg-white/5 text-slate-500"
-                        : "bg-sky-600/90 text-white hover:bg-sky-500"
+                        : "bg-orange-600 text-white hover:bg-orange-500"
                     )}
                   >
                     {heroCaptionSaving ? "Saving…" : "Save label"}
@@ -492,10 +482,7 @@ export function RoomDetailPanel({
 
       <div>
         <h3
-          className={cn(
-            "mb-2 text-xs font-semibold uppercase tracking-wider",
-            sleekGallery ? "text-slate-400" : "text-slate-500"
-          )}
+          className={cn("mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500")}
         >
           {sleekGallery ? `${room.name} Gallery` : "Gallery · drag to reorder"}
         </h3>
@@ -530,10 +517,10 @@ export function RoomDetailPanel({
                               if (raster) openPresentationFor(img);
                             }}
                             className={cn(
-                              "relative block aspect-square w-full overflow-hidden rounded-lg border border-white/10 bg-black/30",
+                              "relative block aspect-square w-full overflow-hidden rounded-lg border border-white/10 bg-app-inset",
                               active
-                                ? "border-sky-400/60 ring-1 ring-sky-400/30"
-                                : "border-white/10 hover:border-white/20"
+                                ? "border-orange-500/55 ring-1 ring-orange-500/25"
+                                : "hover:border-white/20"
                             )}
                           >
                             {raster && url && (
@@ -600,12 +587,12 @@ export function RoomDetailPanel({
                       if (raster) openPresentationFor(img);
                     }}
                     className={cn(
-                      "relative block w-full overflow-hidden",
+                      "relative block w-full overflow-hidden border border-white/10 bg-app-inset transition hover:border-white/20",
                       sleekGallery
-                        ? "aspect-[4/3] rounded-xl border border-white/15 bg-white/[0.05] shadow-sm ring-1 ring-white/10 backdrop-blur-sm transition hover:border-white/25 hover:bg-white/[0.08]"
-                        : "aspect-square rounded-lg border border-white/10 bg-black/30 hover:border-white/20",
+                        ? "aspect-[4/3] rounded-xl"
+                        : "aspect-square rounded-lg",
                       active
-                        ? "border-sky-400/60 ring-1 ring-sky-400/30"
+                        ? "border-orange-500/55 ring-1 ring-orange-500/25"
                         : ""
                     )}
                   >

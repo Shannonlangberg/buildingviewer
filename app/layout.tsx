@@ -1,15 +1,8 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Syne } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const syne = Syne({
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
-  weight: ["500", "600", "700", "800"],
-});
-
-const plusJakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-body",
   display: "swap",
@@ -28,9 +21,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${syne.variable} ${plusJakarta.variable}`}>
+    <html lang="en" className={`dark ${inter.variable}`}>
       <body
-        className={`${plusJakarta.className} min-h-screen bg-[#060912] font-sans text-slate-200 antialiased`}
+        className={`${inter.className} min-h-screen bg-app-bg font-sans text-gray-200 antialiased`}
       >
         {children}
       </body>

@@ -56,7 +56,11 @@ export function PolygonVertexHandles({
             e.preventDefault();
             onVertexPointerDown(room.id, i, e);
           }}
-        />
+        >
+          <title>
+            Drag to move. Alt-click to remove (needs at least 3 corners).
+          </title>
+        </circle>
       ))}
     </g>
   );

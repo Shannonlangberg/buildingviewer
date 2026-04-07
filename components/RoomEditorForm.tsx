@@ -67,13 +67,13 @@ export function RoomEditorForm({
   return (
     <form
       onSubmit={save}
-      className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 text-xs"
+      className="mt-4 rounded-xl border border-white/10 bg-app-inset p-3 text-xs"
     >
-      <p className="mb-2 font-semibold uppercase tracking-wider text-slate-500">
+      <p className="mb-2 font-semibold uppercase tracking-wider text-gray-500">
         Room fields (admin-ready)
       </p>
       <div className="grid gap-2 sm:grid-cols-3">
-        <label className="text-slate-500">
+        <label className="text-gray-500">
           Name
           <input
             value={name}
@@ -82,10 +82,10 @@ export function RoomEditorForm({
               setName(v);
               onDraftChange?.({ name: v });
             }}
-            className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-sm text-slate-100"
+            className="mt-1 w-full rounded-lg border border-white/10 bg-app-bg px-2 py-1.5 text-sm text-gray-100"
           />
         </label>
-        <label className="text-slate-500">
+        <label className="text-gray-500">
           Status
           <select
             value={status}
@@ -94,14 +94,14 @@ export function RoomEditorForm({
               setStatus(v);
               onDraftChange?.({ status: v });
             }}
-            className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-sm text-slate-100"
+            className="mt-1 w-full rounded-lg border border-white/10 bg-app-bg px-2 py-1.5 text-sm text-gray-100"
           >
             <option value="pending">Pending</option>
             <option value="in_progress">In progress</option>
             <option value="confirmed">Confirmed</option>
           </select>
         </label>
-        <label className="text-slate-500">
+        <label className="text-gray-500">
           Colour
           <input
             type="color"
@@ -119,11 +119,11 @@ export function RoomEditorForm({
         <button
           type="submit"
           disabled={!canPersist || busy}
-          className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/15 disabled:opacity-40"
+          className="rounded-lg border border-white/15 bg-app-raised px-3 py-1.5 text-sm font-medium text-white hover:border-white/25 hover:bg-[#2a2e38] disabled:opacity-40"
         >
           {busy ? "Saving…" : "Save room"}
         </button>
-        {msg && <span className="text-slate-400">{msg}</span>}
+        {msg && <span className="text-gray-400">{msg}</span>}
       </div>
     </form>
   );

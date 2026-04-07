@@ -97,7 +97,7 @@ export function ImageUploader({ roomId, disabled, onUploaded }: Props) {
           <input
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-white/[0.10] bg-white/[0.05] px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-cyan-400/35 focus:ring-1 focus:ring-cyan-400/25"
+            className="mt-1 w-full rounded-xl border border-white/10 bg-app-inset px-3 py-2 text-sm text-gray-100 outline-none transition focus:border-orange-500/35 focus:ring-1 focus:ring-orange-500/20"
             placeholder="e.g. Stage repaint"
           />
         </label>
@@ -106,7 +106,7 @@ export function ImageUploader({ roomId, disabled, onUploaded }: Props) {
           <input
             value={uploaderName}
             onChange={(e) => setUploaderName(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-white/[0.10] bg-white/[0.05] px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-cyan-400/35 focus:ring-1 focus:ring-cyan-400/25"
+            className="mt-1 w-full rounded-xl border border-white/10 bg-app-inset px-3 py-2 text-sm text-gray-100 outline-none transition focus:border-orange-500/35 focus:ring-1 focus:ring-orange-500/20"
             placeholder="e.g. Sam"
           />
         </label>
@@ -114,21 +114,21 @@ export function ImageUploader({ roomId, disabled, onUploaded }: Props) {
       <div
         {...getRootProps()}
         className={cn(
-          "cursor-pointer rounded-2xl border border-dashed border-white/[0.14] bg-white/[0.03] px-5 py-7 text-center text-sm text-slate-400 shadow-inner shadow-black/20 transition duration-300 hover:border-cyan-400/35 hover:bg-cyan-500/[0.06]",
-          isDragActive && "border-cyan-400/45 bg-cyan-500/[0.08] shadow-cyan-500/10",
+          "cursor-pointer rounded-xl border border-dashed border-white/15 bg-app-inset px-5 py-7 text-center text-sm text-gray-500 shadow-inner shadow-black/30 transition duration-300 hover:border-orange-500/35 hover:bg-orange-500/[0.06]",
+          isDragActive && "border-orange-500/50 bg-orange-500/10",
           (disabled || progress !== null) && "pointer-events-none opacity-60"
         )}
       >
         <input {...getInputProps()} />
-        <p className="font-medium text-slate-200">Drop files or click to upload</p>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="font-medium text-gray-200">Drop files or click to upload</p>
+        <p className="mt-1 text-xs text-gray-500">
           JPG, PNG, PDF, HEIC · up to 20MB
         </p>
       </div>
       {progress !== null && (
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10 ring-1 ring-white/5">
           <div
-            className="h-full bg-gradient-to-r from-cyan-500/90 to-sky-500/80 transition-all"
+            className="h-full bg-orange-600 transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
