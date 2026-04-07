@@ -169,7 +169,7 @@ export function GalleryPresentationModal({
             <img
               src={slide.src}
               alt={slide.alt}
-              className="max-h-[min(62vh,720px)] max-w-full rounded-xl object-contain shadow-[0_12px_40px_rgba(0,0,0,0.4)] ring-1 ring-black/20"
+              className="max-h-[min(50dvh,720px)] max-w-full rounded-lg object-contain shadow-[0_12px_40px_rgba(0,0,0,0.4)] ring-1 ring-black/20 sm:rounded-xl"
             />
             {hasMany && (
               <>
@@ -179,7 +179,7 @@ export function GalleryPresentationModal({
                     e.stopPropagation();
                     goPrev();
                   }}
-                  className="absolute left-2 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-lg border border-white/15 bg-black/50 text-2xl text-white/90 shadow-lg backdrop-blur-sm transition hover:bg-black/65 hover:text-white sm:left-5 sm:h-14 sm:w-14"
+                  className="absolute left-1 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg border border-white/15 bg-black/50 text-xl text-white/90 shadow-lg backdrop-blur-sm transition active:scale-95 sm:left-5 sm:h-14 sm:w-14 sm:text-2xl"
                   aria-label="Previous image"
                 >
                   ‹
@@ -190,7 +190,7 @@ export function GalleryPresentationModal({
                     e.stopPropagation();
                     goNext();
                   }}
-                  className="absolute right-2 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-lg border border-white/15 bg-black/50 text-2xl text-white/90 shadow-lg backdrop-blur-sm transition hover:bg-black/65 hover:text-white sm:right-5 sm:h-14 sm:w-14"
+                  className="absolute right-1 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg border border-white/15 bg-black/50 text-xl text-white/90 shadow-lg backdrop-blur-sm transition active:scale-95 sm:right-5 sm:h-14 sm:w-14 sm:text-2xl"
                   aria-label="Next image"
                 >
                   ›
@@ -199,7 +199,7 @@ export function GalleryPresentationModal({
             )}
           </div>
 
-          <footer className="border-t border-white/10 bg-app-inset px-4 py-5 text-left sm:px-8 sm:py-6">
+          <footer className="shrink-0 border-t border-white/10 bg-app-inset px-3 py-4 text-left sm:px-8 sm:py-6">
             {canManage && onSaveCaption ? (
               <div className="space-y-4">
                 <div className="space-y-1 text-sm">
