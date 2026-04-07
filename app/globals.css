@@ -3,21 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #070a0f;
+  --foreground: #e2e8f0;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
+}
+
+/* yet-another-react-lightbox — match dark UI */
+.yarl__root {
+  --yarl__color_backdrop: rgba(7, 10, 15, 0.92);
+  --yarl__color_button: rgba(248, 250, 252, 0.85);
+  --yarl__color_button_active: #fff;
 }
 
 @layer utilities {

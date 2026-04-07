@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mt Barker Building
 
-## Getting Started
+Next.js 14 (App Router) floor plan viewer with Supabase-backed room zones and image galleries.
 
-First, run the development server:
+## Local development
 
 ```bash
+npm install
+cp .env.example .env.local
+# Optional: leave Supabase empty to use built-in mock rooms + static SVG base.
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Supabase
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Create a project at [supabase.com](https://supabase.com).
+2. Run `supabase/schema.sql` in the SQL editor, then `supabase/seed.sql`.
+3. Copy **Project URL**, **anon key**, and **service role key** into `.env.local` (see `.env.example`).
+4. The `room-images` bucket is created by the schema; public read is enabled for gallery URLs.
 
-## Learn More
+## Dev layout editor
 
-To learn more about Next.js, take a look at the following resources:
+- Set `NEXT_PUBLIC_SHOW_FLOORPLAN_EDIT=true`, **or** add `?edit=1` to the URL.
+- Drag labels and rectangular zones; **Save to Supabase** uses `SUPABASE_SERVICE_ROLE_KEY` via `/api/rooms`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy on Railway
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Push this repo to GitHub (or connect the folder in Railway).
+2. **New project** → **Deploy from GitHub** → select the repo.
+3. Railway will use `Dockerfile` + `railway.toml` (standalone Next.js on port 3000).
+4. In **Variables**, add:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `NEXT_PUBLIC_STORAGE_BUCKET` = `room-images`
+   - Optional: `NEXT_PUBLIC_SHOW_FLOORPLAN_EDIT` = `false` in production
+5. Deploy. Railway sets `PORT`; the container listens on `3000` by default (mapped by Railway).
 
-## Deploy on Vercel
+If you prefer **Nixpacks** instead of Docker, remove or rename `railway.toml` and set the **Root Directory** to this folder; add the same environment variables.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project layout
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/page.tsx` — server page, loads rooms/floorplan
+- `app/api/*` — rooms, floorplans, images, upload
+- `components/*` — floor plan, sidebar, gallery, lightbox, uploader, dev editor
+- `lib/` — Supabase helpers, types, mock seed data
+- `public/floorplans/` — default dark base SVG
