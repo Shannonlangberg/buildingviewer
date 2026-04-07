@@ -9,7 +9,6 @@ import {
 import type { Floorplan, Room } from "@/lib/types";
 import { FloorPlanEditor } from "./FloorPlanEditor";
 import { FloorPlanViewer } from "./FloorPlanViewer";
-import { PresentationView } from "./PresentationView";
 import { RoomDetailPanel } from "./RoomDetailPanel";
 import { RoomSidebar } from "./RoomSidebar";
 
@@ -58,7 +57,6 @@ export function BuildingShell({
   const [roomColorSaving, setRoomColorSaving] = useState(false);
   const [roomNameSaving, setRoomNameSaving] = useState(false);
   const [labelStyleSaving, setLabelStyleSaving] = useState(false);
-  const [presentMode, setPresentMode] = useState(false);
   const [baseLayerOpacity, setBaseLayerOpacity] = useState(
     DEFAULT_FLOORPLAN_BASE_OPACITY
   );
@@ -334,28 +332,13 @@ export function BuildingShell({
     <div className="flex min-h-[100dvh] flex-col bg-app-bg text-gray-200">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-app-header">
         <div className="relative mx-auto flex h-12 max-w-[1600px] items-center justify-between px-3 sm:h-16 sm:px-7">
-          <div className="flex w-20 shrink-0 items-center gap-2 sm:w-32">
-            <button
-              type="button"
-              onClick={() => setPresentMode(true)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/10 bg-app-panel px-2.5 text-xs font-medium text-gray-300 transition active:scale-95 sm:gap-2 sm:px-3"
-              title="Present floor plan fullscreen"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
-                />
-              </svg>
-              <span className="hidden sm:inline">Present</span>
-            </button>
+          <div className="flex w-20 shrink-0 items-center sm:w-32">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Futures Church"
+              className="h-8 w-8 object-contain sm:h-9 sm:w-9"
+            />
           </div>
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <h1 className="pointer-events-auto text-sm font-semibold tracking-tight text-white sm:text-lg">
@@ -542,12 +525,6 @@ export function BuildingShell({
         </div>
       </footer>
 
-      <PresentationView
-        open={presentMode}
-        onClose={() => setPresentMode(false)}
-        floorplan={floorplan}
-        rooms={rooms}
-      />
     </div>
   );
 }
