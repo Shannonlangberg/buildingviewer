@@ -44,11 +44,11 @@ export function RoomZoneOverlay({
         const othersDimmed =
           dimUnselected && selectedId != null && !isSel && !isHover && !dragging;
 
-        const baseOpacity = editMode ? 0.44 : 0.38;
+        const baseOpacity = editMode ? 0.48 : 0.55;
         let opacity = baseOpacity;
-        if (othersDimmed) opacity = Math.min(0.16, baseOpacity * 0.38);
-        else if (isSel || dragging) opacity = Math.min(0.88, baseOpacity + 0.36);
-        else if (isHover) opacity = Math.min(0.78, baseOpacity + 0.32);
+        if (othersDimmed) opacity = Math.min(0.2, baseOpacity * 0.35);
+        else if (isSel || dragging) opacity = Math.min(0.92, baseOpacity + 0.3);
+        else if (isHover) opacity = Math.min(0.82, baseOpacity + 0.22);
 
         const strokeW = isSel ? 0.52 : isHover ? 0.4 : 0.24;
         let filter: string | undefined;

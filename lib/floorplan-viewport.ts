@@ -1,10 +1,10 @@
 import { svgClientToViewBox } from "./floorplan-edit";
 
 /**
- * ViewBox center for pan/zoom (matches `FloorPlanCanvas` viewBox `0 0 100 75`).
+ * ViewBox center for pan/zoom (matches `FloorPlanCanvas` viewBox `0 0 100 100`).
  */
 export const FLOORPLAN_VIEW_CX = 50;
-export const FLOORPLAN_VIEW_CY = 37.5;
+export const FLOORPLAN_VIEW_CY = 50;
 
 export type FloorplanViewport = {
   panX: number;

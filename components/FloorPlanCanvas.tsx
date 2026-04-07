@@ -53,7 +53,7 @@ export function FloorPlanCanvas({
   return (
     <svg
       ref={svgRef as unknown as Ref<SVGSVGElement>}
-      viewBox="0 0 100 75"
+      viewBox="0 0 100 100"
       className="absolute inset-0 h-full w-full touch-none select-none font-sans [text-rendering:geometricPrecision]"
       style={{
         fontFamily:
@@ -93,7 +93,7 @@ export function FloorPlanCanvas({
             <image
               href={baseSrc}
               width={100}
-              height={75}
+              height={100}
               preserveAspectRatio="xMidYMid meet"
               style={{ opacity }}
             />
