@@ -20,11 +20,10 @@ const CATEGORY: Record<string, string> = {
   alfresco: "Outdoor",
 };
 
-/** Inline fallbacks when utility CSS fails to load (static 404, stale cache). */
 const navStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: "0.5rem",
+  gap: "0.25rem",
   overflowY: "auto",
   paddingRight: 4,
 };
@@ -35,53 +34,28 @@ function roomButtonStyle(active: boolean): CSSProperties {
     width: "100%",
     maxWidth: "100%",
     boxSizing: "border-box",
-    alignItems: "flex-start",
-    gap: 12,
-    padding: "10px 12px",
-    borderRadius: 12,
+    alignItems: "center",
+    gap: 8,
+    padding: "6px 10px",
+    borderRadius: 10,
     cursor: "pointer",
     textAlign: "left",
     font: "inherit",
     color: "inherit",
     border: active
       ? "1px solid rgba(249, 115, 22, 0.35)"
-      : "1px solid rgba(255,255,255,0.06)",
+      : "1px solid transparent",
     background: active
       ? "rgba(249, 115, 22, 0.14)"
-      : "rgba(255,255,255,0.02)",
+      : "transparent",
   };
 }
 
-function statusPillInline(status: Room["status"]): CSSProperties {
-  const map = {
-    pending: {
-      background: "rgba(245, 158, 11, 0.12)",
-      color: "rgba(253, 230, 138, 0.95)",
-      boxShadow: "inset 0 0 0 1px rgba(245, 158, 11, 0.22)",
-    },
-    in_progress: {
-      background: "rgba(14, 165, 233, 0.12)",
-      color: "rgba(186, 230, 253, 0.95)",
-      boxShadow: "inset 0 0 0 1px rgba(14, 165, 233, 0.22)",
-    },
-    confirmed: {
-      background: "rgba(20, 184, 166, 0.14)",
-      color: "rgba(153, 246, 228, 0.95)",
-      boxShadow: "inset 0 0 0 1px rgba(45, 212, 191, 0.28)",
-    },
-  } as const;
-  return {
-    marginTop: 8,
-    display: "inline-flex",
-    alignItems: "center",
-    borderRadius: 9999,
-    padding: "2px 8px",
-    fontSize: 10,
-    fontWeight: 600,
-    lineHeight: 1.2,
-    ...map[status],
-  };
-}
+const STATUS_COLORS: Record<Room["status"], string> = {
+  pending: "text-amber-300/80",
+  in_progress: "text-sky-300/80",
+  confirmed: "text-teal-300/80",
+};
 
 type Props = {
   rooms: Room[];
@@ -92,27 +66,22 @@ type Props = {
 export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
   return (
     <aside
-      className="flex flex-col gap-3 rounded-2xl border border-white/[0.12] bg-black/50 p-4 shadow-2xl shadow-black/50 backdrop-blur-xl backdrop-saturate-150 lg:min-h-0 lg:max-h-[calc(100vh-5rem)]"
+      className="flex flex-col gap-2 rounded-2xl border border-white/[0.12] bg-black/50 px-3 py-3 shadow-2xl shadow-black/50 backdrop-blur-xl backdrop-saturate-150 lg:min-h-0 lg:max-h-[calc(100vh-5rem)]"
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: 12,
+        gap: 8,
         borderRadius: 16,
         border: "1px solid rgba(255,255,255,0.12)",
-        padding: 16,
+        padding: "12px",
         boxSizing: "border-box",
       }}
     >
-      <div>
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500">
-          Rooms
-        </h2>
-        <p className="mt-1.5 text-sm leading-relaxed text-gray-500">
-          Select a room to view its gallery.
-        </p>
-      </div>
+      <h2 className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-500">
+        Rooms
+      </h2>
       <nav
-        className="flex max-h-[min(50vh,24rem)] flex-col gap-2 overflow-y-auto pr-1 lg:max-h-[calc(100vh-10rem)]"
+        className="flex flex-col gap-0.5 overflow-y-auto pr-0.5 lg:max-h-[calc(100vh-7rem)]"
         style={navStyle}
       >
         {rooms.map((room) => {
@@ -125,48 +94,31 @@ export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
               onClick={() => onSelect(room.id)}
               style={roomButtonStyle(active)}
               className={cn(
-                "transition duration-200",
+                "transition duration-150",
                 active
-                  ? "shadow-md shadow-black/30 ring-1 ring-orange-500/25"
-                  : "hover:border-white/10 hover:bg-white/[0.04]"
+                  ? "shadow-sm shadow-black/30 ring-1 ring-orange-500/20"
+                  : "hover:bg-white/[0.05]"
               )}
             >
               <span
-                className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white/15"
-                style={{
-                  marginTop: 6,
-                  width: 10,
-                  height: 10,
-                  flexShrink: 0,
-                  borderRadius: 9999,
-                  boxShadow: "0 0 0 2px rgba(255,255,255,0.12)",
-                  backgroundColor: room.color,
-                }}
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: room.color }}
                 aria-hidden
               />
-              <div className="min-w-0 flex-1 text-left" style={{ minWidth: 0, flex: 1 }}>
-                <div
-                  className="font-semibold leading-snug text-gray-100"
-                  style={{ display: "block", fontWeight: 600, color: "#f3f4f6" }}
-                >
-                  {room.name}
-                </div>
-                <div
-                  className="mt-1 text-xs leading-normal text-gray-500"
-                  style={{
-                    display: "block",
-                    marginTop: 4,
-                    fontSize: 12,
-                    lineHeight: 1.45,
-                    color: "#6b7280",
-                  }}
-                >
-                  {category}
-                </div>
-                <span style={statusPillInline(room.status)}>
-                  {ROOM_STATUS_LABELS[room.status]}
-                </span>
-              </div>
+              <span className="min-w-0 flex-1 truncate text-left text-[13px] font-medium text-gray-100">
+                {room.name}
+              </span>
+              <span className="shrink-0 text-[10px] text-gray-600">
+                {category}
+              </span>
+              <span
+                className={cn(
+                  "shrink-0 text-[9px] font-semibold",
+                  STATUS_COLORS[room.status]
+                )}
+              >
+                {ROOM_STATUS_LABELS[room.status]}
+              </span>
             </button>
           );
         })}
