@@ -41,13 +41,13 @@ export function RoomZoneOverlay({
         const isFocused = isSel || isHover || dragging;
         const isDimmed = anyFocused && !isFocused;
 
-        const baseOpacity = editMode ? 0.48 : 0.55;
+        const baseOpacity = editMode ? 0.55 : 0.7;
         let opacity = baseOpacity;
-        if (isDimmed) opacity = 0.32;
-        else if (isSel || dragging) opacity = 0.88;
-        else if (isHover) opacity = 0.8;
+        if (isDimmed) opacity = 0.4;
+        else if (isSel || dragging) opacity = 0.92;
+        else if (isHover) opacity = 0.85;
 
-        const strokeW = isSel ? 0.55 : isHover ? 0.42 : 0.24;
+        const strokeW = isSel ? 0.6 : isHover ? 0.45 : 0.3;
         let filter: string | undefined;
         if (isSel) filter = "url(#zonePulseGlow)";
         else if (isHover && !editMode) filter = "url(#zoneGlowHover)";
