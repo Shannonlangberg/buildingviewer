@@ -7,13 +7,16 @@ import {
   svgClientToViewBox,
 } from "@/lib/floorplan-edit";
 import {
-  effectiveLabelFill,
-  effectiveLabelFontSize,
-} from "@/lib/room-label-style";
+  DEFAULT_FLOORPLAN_VIEWPORT,
+  nextViewportForWheelZoom,
+  svgClientToPlan,
+  type FloorplanViewport,
+} from "@/lib/floorplan-viewport";
 import { removePolygonVertex } from "@/lib/polygon-edit";
 import type { Floorplan, RectResizeHandleId, Room } from "@/lib/types";
-import { parsePolygonPoints, serializePolygonPoints } from "@/lib/utils";
+import { cn, parsePolygonPoints, serializePolygonPoints } from "@/lib/utils";
 import { FloorPlanCanvas } from "./FloorPlanCanvas";
+import { FloorPlanRoomLabels } from "./FloorPlanRoomLabels";
 import { PolygonEdgeInsertHandles } from "./PolygonEdgeInsertHandles";
 import { PolygonVertexHandles } from "./PolygonVertexHandles";
 import { RectResizeHandles } from "./RectResizeHandles";
@@ -23,7 +26,7 @@ type Props = {
   floorplan: Floorplan | null;
   rooms: Room[];
   selectedId: string | null;
-  onSelectRoom: (id: string) => void;
+  onSelectRoom: (id: string | null) => void;
   editMode: boolean;
   onRoomsDirty?: (next: Room[]) => void;
   /** Base blueprint / image under zones (0–1). */
@@ -40,10 +43,43 @@ export function FloorPlanViewer({
   baseLayerOpacity,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [viewport, setViewport] = useState<FloorplanViewport>(
+    DEFAULT_FLOORPLAN_VIEWPORT
+  );
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [drag, setDrag] = useState<LayoutPointerDragState | null>(null);
   const [draggingRoomId, setDraggingRoomId] = useState<string | null>(null);
   const movedRef = useRef(false);
+  const suppressBackdropClickRef = useRef(false);
+  const panSessionRef = useRef<null | {
+    pointerId: number;
+    startRoot: { x: number; y: number };
+    startPan: { x: number; y: number };
+  }>(null);
+
+  const effectiveViewport = editMode
+    ? DEFAULT_FLOORPLAN_VIEWPORT
+    : viewport;
+
+  useEffect(() => {
+    if (editMode) setViewport(DEFAULT_FLOORPLAN_VIEWPORT);
+  }, [editMode]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    const svg = svgRef.current;
+    if (!el || !svg) return;
+    const onWheel = (e: WheelEvent) => {
+      if (editMode) return;
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 0.9 : 1.11;
+      const root = svgClientToViewBox(svg, e.clientX, e.clientY);
+      setViewport((v) => nextViewportForWheelZoom(v, root, factor));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [editMode]);
 
   const defaultBase = "/floorplans/mt-barker-base.svg";
   const selectedRoom =
@@ -52,7 +88,12 @@ export function FloorPlanViewer({
   const applyDrag = useCallback(
     (clientX: number, clientY: number) => {
       if (!drag || !svgRef.current || !onRoomsDirty) return;
-      const cur = svgClientToViewBox(svgRef.current, clientX, clientY);
+      const cur = svgClientToPlan(
+        svgRef.current,
+        effectiveViewport,
+        clientX,
+        clientY
+      );
       const dx = cur.x - drag.startSvg.x;
       const dy = cur.y - drag.startSvg.y;
       if (Math.hypot(dx, dy) > 0.08) movedRef.current = true;
@@ -65,7 +106,7 @@ export function FloorPlanViewer({
       );
       onRoomsDirty(next);
     },
-    [drag, onRoomsDirty, rooms]
+    [drag, effectiveViewport, onRoomsDirty, rooms]
   );
 
   useEffect(() => {
@@ -106,7 +147,12 @@ export function FloorPlanViewer({
     e.preventDefault();
     const room = rooms.find((r) => r.id === roomId);
     if (!room || room.shape_type !== "polygon") return;
-    const startSvg = svgClientToViewBox(svgRef.current, e.clientX, e.clientY);
+    const startSvg = svgClientToPlan(
+      svgRef.current,
+      effectiveViewport,
+      e.clientX,
+      e.clientY
+    );
     beginDrag(
       {
         kind: "polygon-move",
@@ -126,7 +172,12 @@ export function FloorPlanViewer({
     e.preventDefault();
     const room = rooms.find((r) => r.id === roomId);
     if (!room || room.shape_type !== "rect") return;
-    const startSvg = svgClientToViewBox(svgRef.current, e.clientX, e.clientY);
+    const startSvg = svgClientToPlan(
+      svgRef.current,
+      effectiveViewport,
+      e.clientX,
+      e.clientY
+    );
     beginDrag(
       {
         kind: "rect-move",
@@ -167,7 +218,12 @@ export function FloorPlanViewer({
       return;
     }
 
-    const startSvg = svgClientToViewBox(svgRef.current, e.clientX, e.clientY);
+    const startSvg = svgClientToPlan(
+      svgRef.current,
+      effectiveViewport,
+      e.clientX,
+      e.clientY
+    );
     beginDrag(
       {
         kind: "polygon-vertex",
@@ -190,7 +246,12 @@ export function FloorPlanViewer({
     if (!editMode || !onRoomsDirty || !svgRef.current) return;
     const room = rooms.find((r) => r.id === roomId);
     if (!room || room.shape_type !== "rect") return;
-    const startSvg = svgClientToViewBox(svgRef.current, e.clientX, e.clientY);
+    const startSvg = svgClientToPlan(
+      svgRef.current,
+      effectiveViewport,
+      e.clientX,
+      e.clientY
+    );
     beginDrag(
       {
         kind: "rect-resize",
@@ -209,7 +270,12 @@ export function FloorPlanViewer({
     if (!editMode || !onRoomsDirty || !svgRef.current) return;
     e.stopPropagation();
     e.preventDefault();
-    const startSvg = svgClientToViewBox(svgRef.current, e.clientX, e.clientY);
+    const startSvg = svgClientToPlan(
+      svgRef.current,
+      effectiveViewport,
+      e.clientX,
+      e.clientY
+    );
     beginDrag(
       {
         kind: "label",
@@ -231,20 +297,100 @@ export function FloorPlanViewer({
     onSelectRoom(id);
   };
 
+  const onPlanPointerDownCapture = (e: React.PointerEvent) => {
+    if (editMode || e.button !== 0) return;
+    const t = e.target;
+    if (!(t instanceof Element)) return;
+    if (t.closest("[data-room-zone]")) return;
+    if (!t.closest("svg")) return;
+    const svg = svgRef.current;
+    if (!svg) return;
+    panSessionRef.current = {
+      pointerId: e.pointerId,
+      startRoot: svgClientToViewBox(svg, e.clientX, e.clientY),
+      startPan: { x: viewport.panX, y: viewport.panY },
+    };
+
+    const onMove = (ev: PointerEvent) => {
+      const s = panSessionRef.current;
+      if (!s || ev.pointerId !== s.pointerId || !svgRef.current) return;
+      const svgEl = svgRef.current;
+      const r = svgClientToViewBox(svgEl, ev.clientX, ev.clientY);
+      const dx = r.x - s.startRoot.x;
+      const dy = r.y - s.startRoot.y;
+      if (Math.hypot(dx, dy) > 0.45) suppressBackdropClickRef.current = true;
+      setViewport((prev) => ({
+        ...prev,
+        panX: s.startPan.x + dx,
+        panY: s.startPan.y + dy,
+      }));
+    };
+
+    const onUp = (ev: PointerEvent) => {
+      const s = panSessionRef.current;
+      if (!s || ev.pointerId !== s.pointerId) return;
+      panSessionRef.current = null;
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+  };
+
+  const zoomAtScreenCenter = (factor: number) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const r = svg.getBoundingClientRect();
+    const root = svgClientToViewBox(
+      svg,
+      r.left + r.width / 2,
+      r.top + r.height / 2
+    );
+    setViewport((v) => nextViewportForWheelZoom(v, root, factor));
+  };
+
+  const resetView = () => setViewport(DEFAULT_FLOORPLAN_VIEWPORT);
+
+  const backdropClick = () => {
+    if (suppressBackdropClickRef.current) {
+      suppressBackdropClickRef.current = false;
+      return;
+    }
+    onSelectRoom(null);
+  };
+
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      <div className="relative h-full w-full">
+    <div
+      ref={containerRef}
+      className={cn(
+        "relative h-full w-full overflow-hidden",
+        !editMode && "touch-none"
+      )}
+      onPointerDownCapture={onPlanPointerDownCapture}
+    >
+      <div
+        className={cn(
+          "relative h-full w-full",
+          !editMode && "cursor-grab active:cursor-grabbing"
+        )}
+      >
         <FloorPlanCanvas
           floorplan={floorplan}
           fallbackImageSrc={defaultBase}
           svgRef={svgRef}
           baseLayerOpacity={baseLayerOpacity}
+          viewport={effectiveViewport}
+          onBackdropClick={!editMode ? backdropClick : undefined}
         >
           <RoomZoneOverlay
             rooms={rooms}
             selectedId={selectedId}
             hoveredId={hoveredId}
             editMode={editMode}
+            dimUnselected={!editMode && Boolean(selectedId)}
             onSelect={handleZoneClick}
             onHover={setHoveredId}
             draggingRoomId={draggingRoomId}
@@ -261,27 +407,11 @@ export function FloorPlanViewer({
             />
           )}
 
-          {rooms.map((room) => (
-            <text
-              key={`${room.id}-label`}
-              x={room.label_x}
-              y={room.label_y}
-              textAnchor="middle"
-              fill={effectiveLabelFill(room)}
-              style={{
-                fontFamily:
-                  "var(--font-body, ui-sans-serif), system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-                fontSize: `${effectiveLabelFontSize(room)}px`,
-                fontWeight: 600,
-                pointerEvents: editMode ? "auto" : "none",
-                cursor: editMode ? "grab" : "default",
-                textShadow: "0 0.4px 1.2px rgba(0,0,0,0.85)",
-              }}
-              onPointerDown={(e) => onLabelPointerDown(room, e)}
-            >
-              {room.name}
-            </text>
-          ))}
+          <FloorPlanRoomLabels
+            rooms={rooms}
+            editMode={editMode}
+            onLabelPointerDown={onLabelPointerDown}
+          />
 
           <RectResizeHandles
             room={selectedRoom}
@@ -352,6 +482,44 @@ export function FloorPlanViewer({
           </span>
         </div>
       </div>
+
+      {!editMode && (
+        <div className="pointer-events-auto absolute bottom-6 left-6 z-20 flex flex-col gap-0.5 rounded-xl border border-white/[0.12] bg-black/65 p-1 shadow-xl backdrop-blur-md">
+          <button
+            type="button"
+            aria-label="Zoom in"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-lg font-medium text-white/90 transition hover:bg-white/10"
+            onClick={(e) => {
+              e.stopPropagation();
+              zoomAtScreenCenter(1.15);
+            }}
+          >
+            +
+          </button>
+          <button
+            type="button"
+            aria-label="Zoom out"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-lg font-medium text-white/90 transition hover:bg-white/10"
+            onClick={(e) => {
+              e.stopPropagation();
+              zoomAtScreenCenter(1 / 1.15);
+            }}
+          >
+            −
+          </button>
+          <button
+            type="button"
+            aria-label="Reset pan and zoom"
+            className="border-t border-white/10 px-1 pt-1 text-[10px] font-medium text-white/55 transition hover:text-white/85"
+            onClick={(e) => {
+              e.stopPropagation();
+              resetView();
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      )}
     </div>
   );
 }

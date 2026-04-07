@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { svgClientToViewBox } from "@/lib/floorplan-edit";
 import {
-  effectiveLabelFill,
-  effectiveLabelFontSize,
-} from "@/lib/room-label-style";
+  DEFAULT_FLOORPLAN_VIEWPORT,
+  nextViewportForWheelZoom,
+  type FloorplanViewport,
+} from "@/lib/floorplan-viewport";
 import {
   isRasterPreview,
   publicStorageUrl,
@@ -13,6 +15,7 @@ import {
 import { formatUploadDate } from "@/lib/utils";
 import type { Floorplan, Room, RoomImage } from "@/lib/types";
 import { FloorPlanCanvas } from "./FloorPlanCanvas";
+import { FloorPlanRoomLabels } from "./FloorPlanRoomLabels";
 import { RoomZoneOverlay } from "./RoomZoneOverlay";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +33,16 @@ export function PresentationView({
   rooms,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const planContainerRef = useRef<HTMLDivElement | null>(null);
+  const [viewport, setViewport] = useState<FloorplanViewport>(
+    DEFAULT_FLOORPLAN_VIEWPORT
+  );
+  const suppressBackdropClickRef = useRef(false);
+  const panSessionRef = useRef<null | {
+    pointerId: number;
+    startRoot: { x: number; y: number };
+    startPan: { x: number; y: number };
+  }>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [images, setImages] = useState<RoomImage[]>([]);
@@ -76,7 +89,22 @@ export function PresentationView({
       setSelectedId(null);
       setImages([]);
       setHeroIdx(0);
+      setViewport(DEFAULT_FLOORPLAN_VIEWPORT);
     }
+  }, [open]);
+
+  useEffect(() => {
+    const el = planContainerRef.current;
+    const svg = svgRef.current;
+    if (!open || !el || !svg) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 0.9 : 1.11;
+      const root = svgClientToViewBox(svg, e.clientX, e.clientY);
+      setViewport((v) => nextViewportForWheelZoom(v, root, factor));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
   }, [open]);
 
   useEffect(() => {
@@ -121,6 +149,71 @@ export function PresentationView({
     }
   };
 
+  const onPlanPointerDownCapture = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    const t = e.target;
+    if (!(t instanceof Element)) return;
+    if (t.closest("[data-room-zone]")) return;
+    if (!t.closest("svg")) return;
+    const svg = svgRef.current;
+    if (!svg) return;
+    panSessionRef.current = {
+      pointerId: e.pointerId,
+      startRoot: svgClientToViewBox(svg, e.clientX, e.clientY),
+      startPan: { x: viewport.panX, y: viewport.panY },
+    };
+
+    const onMove = (ev: PointerEvent) => {
+      const s = panSessionRef.current;
+      if (!s || ev.pointerId !== s.pointerId || !svgRef.current) return;
+      const svgEl = svgRef.current;
+      const r = svgClientToViewBox(svgEl, ev.clientX, ev.clientY);
+      const dx = r.x - s.startRoot.x;
+      const dy = r.y - s.startRoot.y;
+      if (Math.hypot(dx, dy) > 0.45) suppressBackdropClickRef.current = true;
+      setViewport((prev) => ({
+        ...prev,
+        panX: s.startPan.x + dx,
+        panY: s.startPan.y + dy,
+      }));
+    };
+
+    const onUp = (ev: PointerEvent) => {
+      const s = panSessionRef.current;
+      if (!s || ev.pointerId !== s.pointerId) return;
+      panSessionRef.current = null;
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+  };
+
+  const zoomAtScreenCenter = (factor: number) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const r = svg.getBoundingClientRect();
+    const root = svgClientToViewBox(
+      svg,
+      r.left + r.width / 2,
+      r.top + r.height / 2
+    );
+    setViewport((v) => nextViewportForWheelZoom(v, root, factor));
+  };
+
+  const resetView = () => setViewport(DEFAULT_FLOORPLAN_VIEWPORT);
+
+  const presentationBackdropClick = () => {
+    if (suppressBackdropClickRef.current) {
+      suppressBackdropClickRef.current = false;
+      return;
+    }
+    setSelectedId(null);
+  };
+
   if (typeof document === "undefined" || !open) return null;
 
   const node = (
@@ -162,42 +255,69 @@ export function PresentationView({
               : "max-w-[min(85vw,1100px)]"
           )}
         >
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-black/40 shadow-2xl shadow-black/50 ring-1 ring-white/[0.06]">
-            <FloorPlanCanvas
-              floorplan={floorplan}
-              fallbackImageSrc="/floorplans/mt-barker-base.svg"
-              svgRef={svgRef}
-              baseLayerOpacity={0.85}
-            >
-              <RoomZoneOverlay
-                rooms={rooms}
-                selectedId={selectedId}
-                hoveredId={hoveredId}
-                editMode={false}
-                onSelect={handleSelectRoom}
-                onHover={setHoveredId}
-                draggingRoomId={null}
-              />
-              {rooms.map((room) => (
-                <text
-                  key={`${room.id}-label`}
-                  x={room.label_x}
-                  y={room.label_y}
-                  textAnchor="middle"
-                  fill={effectiveLabelFill(room)}
-                  style={{
-                    fontFamily:
-                      "var(--font-body, ui-sans-serif), system-ui, sans-serif",
-                    fontSize: `${effectiveLabelFontSize(room)}px`,
-                    fontWeight: 600,
-                    pointerEvents: "none",
-                    textShadow: "0 0.4px 1.2px rgba(0,0,0,0.85)",
-                  }}
-                >
-                  {room.name}
-                </text>
-              ))}
-            </FloorPlanCanvas>
+          <div
+            ref={planContainerRef}
+            className="relative aspect-[4/3] w-full touch-none overflow-hidden rounded-2xl border border-white/[0.12] bg-black/40 shadow-2xl shadow-black/50 ring-1 ring-white/[0.06]"
+            onPointerDownCapture={onPlanPointerDownCapture}
+          >
+            <div className="relative h-full w-full cursor-grab active:cursor-grabbing">
+              <FloorPlanCanvas
+                floorplan={floorplan}
+                fallbackImageSrc="/floorplans/mt-barker-base.svg"
+                svgRef={svgRef}
+                baseLayerOpacity={0.85}
+                viewport={viewport}
+                onBackdropClick={presentationBackdropClick}
+              >
+                <RoomZoneOverlay
+                  rooms={rooms}
+                  selectedId={selectedId}
+                  hoveredId={hoveredId}
+                  editMode={false}
+                  dimUnselected={Boolean(selectedId)}
+                  onSelect={handleSelectRoom}
+                  onHover={setHoveredId}
+                  draggingRoomId={null}
+                />
+                <FloorPlanRoomLabels rooms={rooms} editMode={false} />
+              </FloorPlanCanvas>
+            </div>
+
+            <div className="pointer-events-auto absolute bottom-3 left-3 z-10 flex flex-col gap-0.5 rounded-xl border border-white/[0.12] bg-black/65 p-1 shadow-lg backdrop-blur-md">
+              <button
+                type="button"
+                aria-label="Zoom in"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-base font-medium text-white/90 transition hover:bg-white/10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  zoomAtScreenCenter(1.15);
+                }}
+              >
+                +
+              </button>
+              <button
+                type="button"
+                aria-label="Zoom out"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-base font-medium text-white/90 transition hover:bg-white/10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  zoomAtScreenCenter(1 / 1.15);
+                }}
+              >
+                −
+              </button>
+              <button
+                type="button"
+                aria-label="Reset pan and zoom"
+                className="border-t border-white/10 px-0.5 pt-1 text-[9px] font-medium text-white/55 transition hover:text-white/85"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  resetView();
+                }}
+              >
+                Reset
+              </button>
+            </div>
           </div>
 
           {/* Room name chips at bottom of plan */}

@@ -2,12 +2,15 @@
 
 import { parsePolygonPoints } from "@/lib/utils";
 import type { Room } from "@/lib/types";
+import { ROOM_STATUS_LABELS } from "@/lib/types";
 
 type Props = {
   rooms: Room[];
   selectedId: string | null;
   hoveredId: string | null;
   editMode: boolean;
+  /** When a room is selected, fade other zones (view mode only). */
+  dimUnselected?: boolean;
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
   draggingRoomId: string | null;
@@ -17,11 +20,15 @@ type Props = {
   onPolygonMovePointerDown?: (roomId: string, e: React.PointerEvent) => void;
 };
 
+const TRANSITION =
+  "opacity 0.22s ease, stroke-width 0.22s ease, filter 0.22s ease";
+
 export function RoomZoneOverlay({
   rooms,
   selectedId,
   hoveredId,
   editMode,
+  dimUnselected = false,
   onSelect,
   onHover,
   draggingRoomId,
@@ -34,20 +41,33 @@ export function RoomZoneOverlay({
         const isSel = room.id === selectedId;
         const isHover = room.id === hoveredId;
         const dragging = room.id === draggingRoomId;
-        const baseOpacity = editMode ? 0.42 : 0.34;
-        const opacity =
-          isSel || isHover || dragging
-            ? Math.min(0.72, baseOpacity + 0.28)
-            : baseOpacity;
-        const strokeW = isSel ? 0.45 : isHover ? 0.35 : 0.22;
-        const filter = isSel ? "url(#zoneGlow)" : undefined;
+        const othersDimmed =
+          dimUnselected && selectedId != null && !isSel && !isHover && !dragging;
+
+        const baseOpacity = editMode ? 0.44 : 0.38;
+        let opacity = baseOpacity;
+        if (othersDimmed) opacity = Math.min(0.16, baseOpacity * 0.38);
+        else if (isSel || dragging) opacity = Math.min(0.88, baseOpacity + 0.36);
+        else if (isHover) opacity = Math.min(0.78, baseOpacity + 0.32);
+
+        const strokeW = isSel ? 0.52 : isHover ? 0.4 : 0.24;
+        let filter: string | undefined;
+        if (isSel) filter = "url(#zoneGlow)";
+        else if (isHover && !editMode) filter = "url(#zoneGlowHover)";
 
         const common = {
           fill: room.color,
           opacity,
-          stroke: "rgba(255,255,255,0.35)",
+          stroke: isSel
+            ? "rgba(255,255,255,0.55)"
+            : isHover
+              ? "rgba(255,255,255,0.48)"
+              : "rgba(255,255,255,0.32)",
           strokeWidth: strokeW,
-          style: { cursor: editMode ? "grab" : "pointer" } as const,
+          style: {
+            cursor: editMode ? "grab" : "pointer",
+            transition: TRANSITION,
+          } as const,
           filter,
           onPointerEnter: () => onHover(room.id),
           onPointerLeave: () => onHover(null),
@@ -56,6 +76,8 @@ export function RoomZoneOverlay({
             onSelect(room.id);
           },
         };
+
+        const tip = `${room.name} — ${ROOM_STATUS_LABELS[room.status]}`;
 
         if (room.shape_type === "polygon") {
           const pts = parsePolygonPoints(room.polygon_points);
@@ -67,12 +89,15 @@ export function RoomZoneOverlay({
             <path
               key={room.id}
               d={d}
+              data-room-zone="true"
               {...common}
               onPointerDown={(e) => {
                 if (editMode && onPolygonMovePointerDown)
                   onPolygonMovePointerDown(room.id, e);
               }}
-            />
+            >
+              <title>{tip}</title>
+            </path>
           );
         }
 
@@ -87,14 +112,17 @@ export function RoomZoneOverlay({
             y={y}
             width={w}
             height={h}
-            rx={0.35}
-            ry={0.35}
+            rx={0.4}
+            ry={0.4}
+            data-room-zone="true"
             {...common}
             onPointerDown={(e) => {
               if (editMode && onRectMovePointerDown)
                 onRectMovePointerDown(room.id, e);
             }}
-          />
+          >
+            <title>{tip}</title>
+          </rect>
         );
       })}
     </g>
