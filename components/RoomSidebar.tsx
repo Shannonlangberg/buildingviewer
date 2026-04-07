@@ -1,6 +1,5 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import type { Room } from "@/lib/types";
 
@@ -19,37 +18,6 @@ const CATEGORY: Record<string, string> = {
   alfresco: "Outdoor",
 };
 
-const navStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "2px",
-  overflowY: "auto",
-  paddingRight: 4,
-};
-
-function roomButtonStyle(active: boolean): CSSProperties {
-  return {
-    display: "flex",
-    width: "100%",
-    maxWidth: "100%",
-    boxSizing: "border-box",
-    alignItems: "center",
-    gap: 10,
-    padding: "8px 10px",
-    borderRadius: 10,
-    cursor: "pointer",
-    textAlign: "left",
-    font: "inherit",
-    color: "inherit",
-    border: active
-      ? "1px solid rgba(249, 115, 22, 0.35)"
-      : "1px solid transparent",
-    background: active
-      ? "rgba(249, 115, 22, 0.14)"
-      : "transparent",
-  };
-}
-
 type Props = {
   rooms: Room[];
   selectedId: string | null;
@@ -58,25 +26,14 @@ type Props = {
 
 export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
   return (
-    <aside
-      className="flex flex-col gap-2 rounded-2xl border border-white/[0.12] bg-black/50 px-3 py-3 shadow-2xl shadow-black/50 backdrop-blur-xl backdrop-saturate-150 lg:min-h-0 lg:max-h-[calc(100vh-5rem)]"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-        borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.12)",
-        padding: "12px",
-        boxSizing: "border-box",
-      }}
-    >
-      <h2 className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500">
+    <aside className="flex h-full flex-col rounded-2xl border border-white/[0.12] bg-black/50 shadow-2xl shadow-black/50 backdrop-blur-xl backdrop-saturate-150">
+      <h2 className="shrink-0 px-4 pb-1 pt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-500">
         Rooms
       </h2>
-      <nav
-        className="flex flex-col gap-0.5 overflow-y-auto pr-0.5 lg:max-h-[calc(100vh-7rem)]"
-        style={navStyle}
-      >
+      <p className="shrink-0 px-4 pb-3 text-[11px] text-gray-600">
+        Select a room to view its gallery.
+      </p>
+      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2.5 pb-3">
         {rooms.map((room) => {
           const active = room.id === selectedId;
           const category = CATEGORY[room.slug] ?? "Zone";
@@ -85,21 +42,25 @@ export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
               key={room.id}
               type="button"
               onClick={() => onSelect(room.id)}
-              style={roomButtonStyle(active)}
               className={cn(
-                "transition duration-150",
+                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition duration-150",
                 active
-                  ? "shadow-sm shadow-black/30 ring-1 ring-orange-500/20"
-                  : "hover:bg-white/[0.05]"
+                  ? "border border-orange-500/30 bg-orange-500/[0.12] shadow-sm shadow-black/30 ring-1 ring-orange-500/20"
+                  : "border border-transparent hover:bg-white/[0.05]"
               )}
             >
               <span
-                className="h-3 w-3 shrink-0 rounded-full"
+                className="h-3 w-3 shrink-0 rounded-full ring-1 ring-white/10"
                 style={{ backgroundColor: room.color }}
                 aria-hidden
               />
-              <div className="min-w-0 flex-1 text-left">
-                <div className="text-[13px] font-semibold leading-snug text-gray-100">
+              <div className="min-w-0 flex-1">
+                <div
+                  className={cn(
+                    "truncate text-[13px] font-semibold leading-snug",
+                    active ? "text-white" : "text-gray-200"
+                  )}
+                >
                   {room.name}
                 </div>
                 <div className="text-[11px] leading-tight text-gray-500">

@@ -331,16 +331,16 @@ export function BuildingShell({
   return (
     <div className="flex min-h-screen flex-col bg-app-bg text-gray-200">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-app-header">
-        <div className="relative mx-auto flex h-[3.25rem] max-w-[1600px] items-center justify-between px-4 sm:h-14 sm:px-6">
-          <div className="flex w-24 shrink-0 items-center gap-1.5 sm:w-28">
+        <div className="relative mx-auto flex h-14 max-w-[1600px] items-center justify-between px-5 sm:h-16 sm:px-7">
+          <div className="flex w-28 shrink-0 items-center gap-2 sm:w-32">
             <button
               type="button"
               onClick={() => setPresentMode(true)}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-app-panel px-2.5 text-[11px] font-medium text-gray-300 transition hover:border-white/20 hover:bg-app-raised hover:text-white"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-app-panel px-3 text-xs font-medium text-gray-300 transition hover:border-white/20 hover:bg-app-raised hover:text-white"
               title="Present floor plan fullscreen"
             >
               <svg
-                className="h-3.5 w-3.5"
+                className="h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -355,15 +355,12 @@ export function BuildingShell({
               <span className="hidden sm:inline">Present</span>
             </button>
           </div>
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-            <h1 className="pointer-events-auto text-[0.95rem] font-semibold tracking-tight text-white sm:text-lg">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <h1 className="pointer-events-auto text-base font-semibold tracking-tight text-white sm:text-lg">
               Mt Barker Building
             </h1>
-            <p className="hidden text-[11px] text-gray-500 sm:block">
-              Floor plan & room galleries
-            </p>
           </div>
-          <div className="flex w-24 shrink-0 justify-end sm:w-28">
+          <div className="flex w-28 shrink-0 justify-end sm:w-32">
             {!showEditChrome && (
               <button
                 type="button"
@@ -438,9 +435,9 @@ export function BuildingShell({
         </div>
 
         {/* Floating panels on top */}
-        <div className="pointer-events-none relative z-10 flex min-h-[calc(100vh-3.75rem)] flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-start">
+        <div className="pointer-events-none relative z-10 flex min-h-[calc(100vh-4rem)] flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-stretch">
           {/* Left: room sidebar */}
-          <div className="pointer-events-auto w-full shrink-0 lg:w-[220px] xl:w-[250px]">
+          <div className="pointer-events-auto w-full shrink-0 lg:w-[250px] xl:w-[270px]">
             <RoomSidebar
               rooms={displayRooms}
               selectedId={selectedId}
@@ -452,7 +449,7 @@ export function BuildingShell({
           <div className="hidden flex-1 lg:block" />
 
           {/* Right: gallery panel */}
-          <div className="pointer-events-auto w-full shrink-0 lg:w-[320px] xl:w-[360px]">
+          <div className="pointer-events-auto w-full shrink-0 lg:w-[340px] xl:w-[380px]">
             <RoomDetailPanel
               room={selectedRoom}
               editMode={editMode}
@@ -464,11 +461,9 @@ export function BuildingShell({
         </div>
       </main>
 
-      <footer className="mt-auto border-t border-white/10 bg-app-header py-3 sm:py-4">
-        <div className="mx-auto flex max-w-[1600px] flex-col items-center justify-center gap-1 px-4 text-center text-[11px] text-gray-500 sm:flex-row sm:gap-3">
+      <footer className="mt-auto border-t border-white/10 bg-app-header py-3.5 sm:py-4">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-center gap-2 px-5 text-center text-[11px] text-gray-500">
           <span>© {new Date().getFullYear()} Mt Barker Building</span>
-          <span className="hidden text-white/15 sm:inline">·</span>
-          <span>Campus viewer</span>
         </div>
       </footer>
 
