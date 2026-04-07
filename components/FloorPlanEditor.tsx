@@ -98,6 +98,27 @@ function LocalPersistHint({
           </li>
         )}
       </ul>
+      {(capabilities.supabaseUrlPresentButInvalid ||
+        capabilities.serviceRoleKeyPresentButInvalid) && (
+        <p className="mt-2 border-t border-amber-500/20 pt-2 text-[10px] leading-snug text-amber-200/90">
+          {capabilities.supabaseUrlPresentButInvalid && (
+            <>
+              <strong>URL looks wrong:</strong> use the exact{" "}
+              <em>Project URL</em> from Supabase (e.g.{" "}
+              <code className="text-amber-100/95">https://xxxxx.supabase.co</code>
+              ), no quotes or trailing spaces.{" "}
+            </>
+          )}
+          {capabilities.serviceRoleKeyPresentButInvalid && (
+            <>
+              <strong>Service role key looks wrong:</strong> copy the full{" "}
+              <em>service_role</em> JWT (three segments separated by dots)—not
+              the anon key, not truncated. Remove wrapping quotes in Railway.{" "}
+            </>
+          )}
+          Then <strong>Redeploy</strong> the Railway service.
+        </p>
+      )}
     </div>
   );
 }
