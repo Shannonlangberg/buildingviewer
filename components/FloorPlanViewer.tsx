@@ -295,33 +295,62 @@ export function FloorPlanViewer({
             onVertexPointerDown={onPolygonVertexPointerDown}
           />
 
-          <g transform="translate(88 8)">
-            <circle
-              r="3.2"
-              fill="rgba(15,23,42,0.65)"
-              stroke="rgba(148,163,184,0.35)"
-              strokeWidth="0.15"
-            />
-            <path
-              d="M 0 -2.1 L 0.55 0.4 L 0 0.1 L -0.55 0.4 Z"
-              fill="#e2e8f0"
-            />
-            <text
-              x="0"
-              y="-3.8"
-              textAnchor="middle"
-              fill="rgba(148,163,184,0.9)"
-              style={{
-                fontSize: "1.8px",
-                fontWeight: 700,
-                fontFamily:
-                  "var(--font-body, ui-sans-serif), system-ui, sans-serif",
-              }}
-            >
-              N
-            </text>
-          </g>
         </FloorPlanCanvas>
+      </div>
+
+      {/* Compass rose — HTML overlay so it stays crisp at any size */}
+      <div className="pointer-events-none absolute right-4 top-4 z-20 flex flex-col items-center">
+        <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-white/[0.12] bg-black/55 shadow-xl shadow-black/40 backdrop-blur-md sm:h-[4.5rem] sm:w-[4.5rem]">
+          {/* Outer tick ring */}
+          <svg
+            viewBox="0 0 72 72"
+            className="absolute inset-0 h-full w-full"
+            aria-hidden
+          >
+            {Array.from({ length: 36 }).map((_, i) => {
+              const a = i * 10 * (Math.PI / 180);
+              const major = i % 9 === 0;
+              const r1 = major ? 30 : 31.5;
+              const r2 = 34;
+              return (
+                <line
+                  key={i}
+                  x1={36 + r1 * Math.sin(a)}
+                  y1={36 - r1 * Math.cos(a)}
+                  x2={36 + r2 * Math.sin(a)}
+                  y2={36 - r2 * Math.cos(a)}
+                  stroke={major ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.15)"}
+                  strokeWidth={major ? 1.2 : 0.6}
+                  strokeLinecap="round"
+                />
+              );
+            })}
+          </svg>
+
+          {/* Arrow */}
+          <svg viewBox="0 0 40 40" className="relative h-9 w-9 sm:h-10 sm:w-10" aria-hidden>
+            {/* North half — white/bright */}
+            <path d="M20 4 L23 20 L20 18 L17 20 Z" fill="rgba(255,255,255,0.92)" />
+            {/* South half — dim */}
+            <path d="M20 36 L17 20 L20 22 L23 20 Z" fill="rgba(255,255,255,0.2)" />
+            {/* Center dot */}
+            <circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.3)" strokeWidth="0.6" />
+          </svg>
+
+          {/* Cardinal labels */}
+          <span className="absolute left-1/2 top-0.5 -translate-x-1/2 text-[9px] font-bold tracking-wide text-white/90 sm:text-[10px]">
+            N
+          </span>
+          <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[8px] font-semibold text-white/30 sm:text-[9px]">
+            S
+          </span>
+          <span className="absolute left-0.5 top-1/2 -translate-y-1/2 text-[8px] font-semibold text-white/30 sm:text-[9px]">
+            W
+          </span>
+          <span className="absolute right-0.5 top-1/2 -translate-y-1/2 text-[8px] font-semibold text-white/30 sm:text-[9px]">
+            E
+          </span>
+        </div>
       </div>
     </div>
   );
