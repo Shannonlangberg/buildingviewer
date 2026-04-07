@@ -9,6 +9,8 @@ import { RoomDetailPanel } from "./RoomDetailPanel";
 import { RoomSidebar } from "./RoomSidebar";
 
 const LAYOUT_SESSION_KEY = "mtb-layout-tools-on";
+const FLOORPLAN_BASE_OPACITY_KEY = "mtb-floorplan-base-opacity";
+const DEFAULT_FLOORPLAN_BASE_OPACITY = 0.82;
 
 function editQueryEnabled(search: string): boolean {
   const q = search.startsWith("?") ? search : `?${search}`;
@@ -50,6 +52,32 @@ export function BuildingShell({
     useState<CapabilitiesPayload | null>(null);
   const [roomColorSaving, setRoomColorSaving] = useState(false);
   const [roomNameSaving, setRoomNameSaving] = useState(false);
+  const [baseLayerOpacity, setBaseLayerOpacity] = useState(
+    DEFAULT_FLOORPLAN_BASE_OPACITY
+  );
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(FLOORPLAN_BASE_OPACITY_KEY);
+      if (raw == null) return;
+      const n = parseFloat(raw);
+      if (!Number.isNaN(n)) {
+        setBaseLayerOpacity(Math.min(1, Math.max(0, n)));
+      }
+    } catch {
+      /* private mode */
+    }
+  }, []);
+
+  const setBaseLayerOpacityPersisted = useCallback((next: number) => {
+    const v = Math.min(1, Math.max(0, next));
+    setBaseLayerOpacity(v);
+    try {
+      localStorage.setItem(FLOORPLAN_BASE_OPACITY_KEY, String(v));
+    } catch {
+      /* private mode */
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,8 +137,8 @@ export function BuildingShell({
   const refreshData = useCallback(async (): Promise<Room[]> => {
     try {
       const [rRes, fRes] = await Promise.all([
-        fetch("/api/rooms"),
-        fetch("/api/floorplans"),
+        fetch("/api/rooms", { cache: "no-store" }),
+        fetch("/api/floorplans", { cache: "no-store" }),
       ]);
       const rJson = await rRes.json();
       const fJson = await fRes.json();
@@ -299,6 +327,7 @@ export function BuildingShell({
             onSelectRoom={setSelectedId}
             editMode={editMode}
             onRoomsDirty={editMode ? setDraftRooms : undefined}
+            baseLayerOpacity={baseLayerOpacity}
           />
           <RoomDetailPanel
             room={selectedRoom}
@@ -338,6 +367,8 @@ export function BuildingShell({
             void saveRoomNameToDb(roomId, name)
           }
           roomNameSaving={roomNameSaving}
+          baseLayerOpacity={baseLayerOpacity}
+          onBaseLayerOpacityChange={setBaseLayerOpacityPersisted}
         />
       )}
     </div>

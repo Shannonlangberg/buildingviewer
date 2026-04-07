@@ -4,6 +4,7 @@ import type { CapabilitiesPayload } from "@/lib/server-capabilities";
 import { floorplanHasRemovableBaseUpload } from "@/lib/public-url";
 import type { Floorplan, Room } from "@/lib/types";
 import { ROOM_STATUS_LABELS } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { FloorplanBaseUpload } from "./FloorplanBaseUpload";
 
 type Props = {
@@ -27,6 +28,8 @@ type Props = {
   onRoomNameDraft: (roomId: string, name: string) => void;
   onSaveRoomName: (roomId: string, name: string) => void;
   roomNameSaving: boolean;
+  baseLayerOpacity: number;
+  onBaseLayerOpacityChange: (opacity: number) => void;
 };
 
 function LocalPersistHint({
@@ -277,6 +280,8 @@ export function FloorPlanEditor({
   onRoomNameDraft,
   onSaveRoomName,
   roomNameSaving,
+  baseLayerOpacity,
+  onBaseLayerOpacityChange,
 }: Props) {
   const r = selectedRoom
     ? draftRooms.find((x) => x.id === selectedRoom.id) ?? selectedRoom
@@ -379,15 +384,52 @@ export function FloorPlanEditor({
         </p>
       )}
       {editMode && (
-        <FloorplanBaseUpload
-          disabled={!canPersist}
-          onUploaded={onFloorplanUploaded}
-          canRemoveUploadedBase={floorplanHasRemovableBaseUpload(
-            floorplan?.image_path,
-            storageBucket
-          )}
-          onRemoveUploadedBase={onFloorplanUploaded}
-        />
+        <div className="mt-2 space-y-3 border-t border-white/10 pt-3">
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                Base plan opacity
+              </p>
+              <span className="tabular-nums text-[11px] font-medium text-slate-400">
+                {Math.round(baseLayerOpacity * 100)}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={Math.round(baseLayerOpacity * 100)}
+              onChange={(e) =>
+                onBaseLayerOpacityChange(Number(e.target.value) / 100)
+              }
+              className={cn(
+                "mt-2 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10",
+                "[&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-sky-400 [&::-webkit-slider-thumb]:shadow-md",
+                "[&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:cursor-grab [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-sky-400"
+              )}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(baseLayerOpacity * 100)}
+              aria-label="Base floor plan opacity"
+            />
+            <p className="mt-1.5 text-[10px] leading-snug text-slate-600">
+              Fades the blueprint or uploaded image under room zones. Saved in
+              this browser only.
+            </p>
+          </div>
+          <div className="border-t border-white/10 pt-3">
+            <FloorplanBaseUpload
+              disabled={!canPersist}
+              onUploaded={onFloorplanUploaded}
+              canRemoveUploadedBase={floorplanHasRemovableBaseUpload(
+                floorplan?.image_path,
+                storageBucket
+              )}
+              onRemoveUploadedBase={onFloorplanUploaded}
+            />
+          </div>
+        </div>
       )}
       {editMode && r && (
         <LayoutLiveReadout

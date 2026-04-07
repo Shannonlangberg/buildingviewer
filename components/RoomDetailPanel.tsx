@@ -26,8 +26,11 @@ import {
 } from "@/lib/public-url";
 import type { Room, RoomImage } from "@/lib/types";
 import { ROOM_STATUS_LABELS } from "@/lib/types";
+import {
+  GalleryPresentationModal,
+  type PresentationSlide,
+} from "./GalleryPresentationModal";
 import { ImageUploader } from "./ImageUploader";
-import { LightboxViewer, type LightSlide } from "./LightboxViewer";
 import { RoomEditorForm } from "./RoomEditorForm";
 import { cn } from "@/lib/utils";
 
@@ -94,9 +97,12 @@ export function RoomDetailPanel({
   const [images, setImages] = useState<RoomImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [heroId, setHeroId] = useState<string | null>(null);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [presentGallery, setPresentGallery] = useState(true);
+  const [presentationOpen, setPresentationOpen] = useState(false);
+  const [presentationIndex, setPresentationIndex] = useState(0);
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+  const [heroCaptionDraft, setHeroCaptionDraft] = useState("");
+  const [heroCaptionSaving, setHeroCaptionSaving] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -131,44 +137,94 @@ export function RoomDetailPanel({
 
   const hero = images.find((i) => i.id === heroId) ?? images[0];
 
-  const rasterSlides: LightSlide[] = useMemo(() => {
+  useEffect(() => {
+    setHeroCaptionDraft(hero?.caption ?? "");
+  }, [hero?.id, hero?.caption]);
+
+  const editGalleryMode = canPersist && !presentGallery;
+  const sleekGallery = !canPersist || presentGallery;
+
+  const presentationSlides: PresentationSlide[] = useMemo(() => {
     return images
       .filter((i) => isRasterPreview(i.storage_path))
       .map((i) => {
         const url = publicStorageUrl(i.storage_path);
-        return url ? { src: url, alt: i.caption ?? "" } : null;
+        if (!url) return null;
+        return {
+          id: i.id,
+          src: url,
+          alt: i.caption ?? room?.name ?? "Room image",
+          caption: i.caption,
+          uploadedAt: i.uploaded_at,
+          uploaderName: i.uploader_name,
+        } satisfies PresentationSlide;
       })
-      .filter(Boolean) as LightSlide[];
-  }, [images]);
+      .filter(Boolean) as PresentationSlide[];
+  }, [images, room?.name]);
 
-  const openLightboxFor = (img: RoomImage) => {
-    const url = publicStorageUrl(img.storage_path);
-    if (!url || !isRasterPreview(img.storage_path)) return;
-    const idx = rasterSlides.findIndex((s) => s.src === url);
+  const openPresentationFor = (img: RoomImage) => {
+    if (!isRasterPreview(img.storage_path)) return;
+    const idx = presentationSlides.findIndex((s) => s.id === img.id);
     if (idx >= 0) {
-      setLightboxIndex(idx);
-      setLightboxOpen(true);
+      setPresentationIndex(idx);
+      setPresentationOpen(true);
     }
   };
 
-  const deleteRoomImage = async (imageId: string) => {
-    if (!canPersist) return;
+  const deleteRoomImage = async (imageId: string): Promise<boolean> => {
+    if (!canPersist) return false;
     if (
       !confirm(
         "Remove this file from the gallery? It will be deleted from storage."
       )
     ) {
-      return;
+      return false;
     }
     setDeletingImageId(imageId);
     try {
       const res = await fetch(`/api/images/${imageId}`, { method: "DELETE" });
-      if (!res.ok) return;
+      if (!res.ok) return false;
       await load();
+      return true;
     } finally {
       setDeletingImageId(null);
     }
   };
+
+  const updateImageCaption = useCallback(
+    async (imageId: string, caption: string): Promise<boolean> => {
+      if (!canPersist) return false;
+      try {
+        const res = await fetch(`/api/images/${imageId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ caption: caption.trim() || null }),
+        });
+        if (!res.ok) return false;
+        await load();
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [canPersist, load]
+  );
+
+  useEffect(() => {
+    if (!presentationOpen) return;
+    if (presentationSlides.length === 0) {
+      setPresentationOpen(false);
+      setPresentationIndex(0);
+      return;
+    }
+    if (presentationIndex >= presentationSlides.length) {
+      setPresentationIndex(presentationSlides.length - 1);
+    }
+  }, [
+    presentationOpen,
+    presentationSlides.length,
+    presentationIndex,
+  ]);
 
   const onDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -221,6 +277,38 @@ export function RoomDetailPanel({
             {ROOM_STATUS_LABELS[room.status]}
           </span>
         </div>
+        {canPersist && (
+          <div
+            className="flex shrink-0 rounded-lg bg-black/35 p-0.5 ring-1 ring-white/10"
+            role="group"
+            aria-label="Gallery view mode"
+          >
+            <button
+              type="button"
+              onClick={() => setPresentGallery(true)}
+              className={cn(
+                "rounded-md px-2.5 py-1 text-[11px] font-medium transition",
+                presentGallery
+                  ? "bg-white/12 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              )}
+            >
+              Present
+            </button>
+            <button
+              type="button"
+              onClick={() => setPresentGallery(false)}
+              className={cn(
+                "rounded-md px-2.5 py-1 text-[11px] font-medium transition",
+                !presentGallery
+                  ? "bg-white/12 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              )}
+            >
+              Edit gallery
+            </button>
+          </div>
+        )}
       </header>
 
       <ImageUploader
@@ -240,7 +328,14 @@ export function RoomDetailPanel({
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           Hero preview
         </h3>
-        <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/[0.08] bg-black/40">
+        <div
+          className={cn(
+            "relative aspect-video w-full overflow-hidden border border-white/[0.08] bg-black/40",
+            sleekGallery
+              ? "rounded-2xl ring-1 ring-white/[0.06]"
+              : "rounded-xl"
+          )}
+        >
           {loading && (
             <div className="absolute inset-0 animate-pulse bg-white/5" />
           )}
@@ -253,12 +348,19 @@ export function RoomDetailPanel({
             hero &&
             heroUrl &&
             isRasterPreview(hero.storage_path) && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={heroUrl}
-                alt={hero.caption ?? room.name}
-                className="absolute inset-0 m-auto max-h-full max-w-full object-contain"
-              />
+              <button
+                type="button"
+                onClick={() => openPresentationFor(hero)}
+                className="absolute inset-0 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0e14]"
+                aria-label="Open image in presentation view"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={heroUrl}
+                  alt={hero.caption ?? room.name}
+                  className="pointer-events-none m-auto max-h-full max-w-full object-contain"
+                />
+              </button>
             )}
           {!loading && hero && heroMime === "application/pdf" && (
             <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
@@ -283,34 +385,88 @@ export function RoomDetailPanel({
             )}
         </div>
         {hero && (
-          <dl className="grid gap-1 text-xs text-slate-400">
-            <div>
-              <dt className="inline text-slate-500">Caption: </dt>
-              <dd className="inline text-slate-300">
-                {hero.caption?.trim() ? hero.caption : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="inline text-slate-500">Uploaded: </dt>
-              <dd className="inline">{formatUploadDate(hero.uploaded_at)}</dd>
-            </div>
-            <div>
-              <dt className="inline text-slate-500">By: </dt>
-              <dd className="inline">
-                {hero.uploader_name?.trim() ? hero.uploader_name : "—"}
-              </dd>
-            </div>
-          </dl>
+          <div className="space-y-3">
+            <dl className="grid gap-1 text-xs text-slate-400">
+              {!canPersist && (
+                <div>
+                  <dt className="inline text-slate-500">Label: </dt>
+                  <dd className="inline text-slate-300">
+                    {hero.caption?.trim() ? hero.caption : "—"}
+                  </dd>
+                </div>
+              )}
+              <div>
+                <dt className="inline text-slate-500">Uploaded: </dt>
+                <dd className="inline">{formatUploadDate(hero.uploaded_at)}</dd>
+              </div>
+              <div>
+                <dt className="inline text-slate-500">By: </dt>
+                <dd className="inline">
+                  {hero.uploader_name?.trim() ? hero.uploader_name : "—"}
+                </dd>
+              </div>
+            </dl>
+            {canPersist && (
+              <div className="border-t border-white/[0.06] pt-3">
+                <label
+                  htmlFor={`hero-label-${hero.id}`}
+                  className="text-[10px] font-semibold uppercase tracking-wider text-slate-500"
+                >
+                  Label
+                </label>
+                <textarea
+                  id={`hero-label-${hero.id}`}
+                  value={heroCaptionDraft}
+                  onChange={(e) => setHeroCaptionDraft(e.target.value)}
+                  rows={2}
+                  maxLength={2000}
+                  placeholder="Short description shown in the gallery…"
+                  className="mt-1.5 w-full resize-y rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:border-sky-500/40 focus:outline-none focus:ring-1 focus:ring-sky-500/30"
+                />
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={
+                      heroCaptionSaving ||
+                      heroCaptionDraft === (hero.caption ?? "")
+                    }
+                    onClick={() => {
+                      void (async () => {
+                        setHeroCaptionSaving(true);
+                        try {
+                          await updateImageCaption(hero.id, heroCaptionDraft);
+                        } finally {
+                          setHeroCaptionSaving(false);
+                        }
+                      })();
+                    }}
+                    className={cn(
+                      "rounded-lg px-3 py-1.5 text-xs font-semibold transition",
+                      heroCaptionSaving ||
+                        heroCaptionDraft === (hero.caption ?? "")
+                        ? "cursor-not-allowed bg-white/5 text-slate-500"
+                        : "bg-sky-600/90 text-white hover:bg-sky-500"
+                    )}
+                  >
+                    {heroCaptionSaving ? "Saving…" : "Save label"}
+                  </button>
+                  <span className="text-[10px] text-slate-600">
+                    {heroCaptionDraft.length}/2000
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
       <div>
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Gallery · drag to reorder
+          {sleekGallery ? `${room.name} Gallery` : "Gallery · drag to reorder"}
         </h3>
         {images.length === 0 && !loading ? (
           <p className="text-sm text-slate-500">No uploads yet.</p>
-        ) : canPersist ? (
+        ) : editGalleryMode ? (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -336,7 +492,7 @@ export function RoomDetailPanel({
                             type="button"
                             onClick={() => {
                               setHeroId(img.id);
-                              if (raster) openLightboxFor(img);
+                              if (raster) openPresentationFor(img);
                             }}
                             className={cn(
                               "relative block aspect-square w-full overflow-hidden rounded-lg border border-white/10 bg-black/30",
@@ -387,26 +543,35 @@ export function RoomDetailPanel({
             </SortableContext>
           </DndContext>
         ) : (
-          <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          <ul
+            className={cn(
+              "grid grid-cols-3 sm:grid-cols-4",
+              sleekGallery ? "gap-3" : "gap-2"
+            )}
+          >
             {images.map((img) => {
               const url = publicStorageUrl(img.storage_path);
               const raster = isRasterPreview(img.storage_path);
               const pdf =
                 guessMimeFromPath(img.storage_path) === "application/pdf";
               const active = img.id === heroId;
+              const deleting = deletingImageId === img.id;
               return (
                 <li key={img.id} className="relative">
                   <button
                     type="button"
                     onClick={() => {
                       setHeroId(img.id);
-                      if (raster) openLightboxFor(img);
+                      if (raster) openPresentationFor(img);
                     }}
                     className={cn(
-                      "relative block aspect-square w-full overflow-hidden rounded-lg border border-white/10 bg-black/30",
+                      "relative block aspect-square w-full overflow-hidden border bg-black/30",
+                      sleekGallery
+                        ? "rounded-xl border-white/[0.12] hover:border-white/25"
+                        : "rounded-lg border-white/10 hover:border-white/20",
                       active
                         ? "border-sky-400/60 ring-1 ring-sky-400/30"
-                        : "border-white/10 hover:border-white/20"
+                        : ""
                     )}
                   >
                     {raster && url && (
@@ -428,6 +593,21 @@ export function RoomDetailPanel({
                       </span>
                     )}
                   </button>
+                  {sleekGallery && canPersist && (
+                    <button
+                      type="button"
+                      title="Remove from gallery"
+                      disabled={deleting}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        void deleteRoomImage(img.id);
+                      }}
+                      className="absolute right-1 top-1 z-[2] rounded bg-rose-950/90 px-1.5 py-0.5 text-[9px] font-semibold text-rose-100 shadow-md ring-1 ring-rose-500/30 hover:bg-rose-900 disabled:opacity-50"
+                    >
+                      {deleting ? "…" : "✕"}
+                    </button>
+                  )}
                 </li>
               );
             })}
@@ -435,11 +615,28 @@ export function RoomDetailPanel({
         )}
       </div>
 
-      <LightboxViewer
-        open={lightboxOpen}
-        index={lightboxIndex}
-        slides={rasterSlides}
-        onClose={() => setLightboxOpen(false)}
+      <GalleryPresentationModal
+        open={presentationOpen}
+        index={presentationIndex}
+        slides={presentationSlides}
+        onClose={() => setPresentationOpen(false)}
+        onIndexChange={setPresentationIndex}
+        canManage={canPersist}
+        deletingImageId={deletingImageId}
+        onDeleteCurrent={async () => {
+          const s = presentationSlides[presentationIndex];
+          if (!s) return;
+          await deleteRoomImage(s.id);
+        }}
+        onSaveCaption={
+          canPersist
+            ? async (caption) => {
+                const s = presentationSlides[presentationIndex];
+                if (!s) return false;
+                return updateImageCaption(s.id, caption);
+              }
+            : undefined
+        }
       />
 
       <RoomEditorForm

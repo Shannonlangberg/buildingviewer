@@ -30,13 +30,6 @@ h3,
   font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
 }
 
-/* yet-another-react-lightbox — match dark UI */
-.yarl__root {
-  --yarl__color_backdrop: rgba(7, 10, 15, 0.92);
-  --yarl__color_button: rgba(248, 250, 252, 0.85);
-  --yarl__color_button_active: #fff;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;

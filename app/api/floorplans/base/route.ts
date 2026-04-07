@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceSupabase } from "@/lib/supabase";
 import { DEFAULT_FLOORPLAN_IMAGE_PATH } from "@/lib/floorplan-defaults";
-import { storageObjectPathFromPublicUrl } from "@/lib/public-url";
+import { floorplanUploadedStorageKey } from "@/lib/public-url";
 
 const BUCKET = process.env.NEXT_PUBLIC_STORAGE_BUCKET ?? "room-images";
 
@@ -26,10 +26,7 @@ export async function DELETE() {
       );
     }
 
-    const objectKey = storageObjectPathFromPublicUrl(
-      fp.image_path?.trim() ?? "",
-      BUCKET
-    );
+    const objectKey = floorplanUploadedStorageKey(fp.image_path, BUCKET);
     if (objectKey?.startsWith("floorplans/")) {
       const { error: rmErr } = await supabase.storage
         .from(BUCKET)

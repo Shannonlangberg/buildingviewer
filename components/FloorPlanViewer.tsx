@@ -19,6 +19,8 @@ type Props = {
   onSelectRoom: (id: string) => void;
   editMode: boolean;
   onRoomsDirty?: (next: Room[]) => void;
+  /** Base blueprint / image under zones (0–1). */
+  baseLayerOpacity?: number;
 };
 
 export function FloorPlanViewer({
@@ -28,6 +30,7 @@ export function FloorPlanViewer({
   onSelectRoom,
   editMode,
   onRoomsDirty,
+  baseLayerOpacity,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -223,6 +226,7 @@ export function FloorPlanViewer({
           floorplan={floorplan}
           fallbackImageSrc={defaultBase}
           svgRef={svgRef}
+          baseLayerOpacity={baseLayerOpacity}
         >
           <RoomZoneOverlay
             rooms={rooms}

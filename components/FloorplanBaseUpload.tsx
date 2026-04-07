@@ -58,7 +58,10 @@ export function FloorplanBaseUpload({
     setErr(null);
     setRemoveBusy(true);
     try {
-      const res = await fetch("/api/floorplans/base", { method: "DELETE" });
+      const res = await fetch("/api/floorplans/base", {
+        method: "DELETE",
+        cache: "no-store",
+      });
       const j = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(j.error ?? "Remove failed");
       onRemoveUploadedBase();
@@ -75,7 +78,7 @@ export function FloorplanBaseUpload({
   ]);
 
   return (
-    <div className="mt-2 flex flex-col gap-2 border-t border-white/10 pt-3">
+    <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
         <label
           className={
