@@ -423,7 +423,7 @@ export function BuildingShell({
       )}
 
       {/* Design-board layout: floor plan is the canvas, panels float on top */}
-      <main className="relative flex-1">
+      <main className="canvas-texture relative flex-1">
         {/* Floor plan — fills entire main area as the canvas */}
         <div className="absolute inset-0">
           <FloorPlanViewer
