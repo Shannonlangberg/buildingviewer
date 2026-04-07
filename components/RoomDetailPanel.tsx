@@ -287,7 +287,7 @@ export function RoomDetailPanel({
         </h3>
         {images.length === 0 && !loading ? (
           <p className="text-sm text-slate-500">No uploads yet.</p>
-        ) : (
+        ) : canPersist ? (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -301,7 +301,8 @@ export function RoomDetailPanel({
                 {images.map((img) => {
                   const url = publicStorageUrl(img.storage_path);
                   const raster = isRasterPreview(img.storage_path);
-                  const pdf = guessMimeFromPath(img.storage_path) === "application/pdf";
+                  const pdf =
+                    guessMimeFromPath(img.storage_path) === "application/pdf";
                   const active = img.id === heroId;
                   return (
                     <li key={img.id}>
@@ -345,6 +346,52 @@ export function RoomDetailPanel({
               </ul>
             </SortableContext>
           </DndContext>
+        ) : (
+          <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {images.map((img) => {
+              const url = publicStorageUrl(img.storage_path);
+              const raster = isRasterPreview(img.storage_path);
+              const pdf =
+                guessMimeFromPath(img.storage_path) === "application/pdf";
+              const active = img.id === heroId;
+              return (
+                <li key={img.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHeroId(img.id);
+                      if (raster) openLightboxFor(img);
+                    }}
+                    className={cn(
+                      "relative block aspect-square w-full overflow-hidden rounded-lg border border-white/10 bg-black/30",
+                      active
+                        ? "border-sky-400/60 ring-1 ring-sky-400/30"
+                        : "border-white/10 hover:border-white/20"
+                    )}
+                  >
+                    {raster && url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={url}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    )}
+                    {pdf && (
+                      <span className="flex h-full items-center justify-center text-[10px] font-medium text-slate-300">
+                        PDF
+                      </span>
+                    )}
+                    {!raster && !pdf && (
+                      <span className="flex h-full items-center justify-center text-[10px] text-slate-400">
+                        FILE
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
 
