@@ -3,7 +3,6 @@
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import type { Room } from "@/lib/types";
-import { ROOM_STATUS_LABELS } from "@/lib/types";
 
 const CATEGORY: Record<string, string> = {
   foyer: "Entry",
@@ -23,7 +22,7 @@ const CATEGORY: Record<string, string> = {
 const navStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: "0.25rem",
+  gap: "2px",
   overflowY: "auto",
   paddingRight: 4,
 };
@@ -35,8 +34,8 @@ function roomButtonStyle(active: boolean): CSSProperties {
     maxWidth: "100%",
     boxSizing: "border-box",
     alignItems: "center",
-    gap: 8,
-    padding: "6px 10px",
+    gap: 10,
+    padding: "8px 10px",
     borderRadius: 10,
     cursor: "pointer",
     textAlign: "left",
@@ -50,12 +49,6 @@ function roomButtonStyle(active: boolean): CSSProperties {
       : "transparent",
   };
 }
-
-const STATUS_COLORS: Record<Room["status"], string> = {
-  pending: "text-amber-300/80",
-  in_progress: "text-sky-300/80",
-  confirmed: "text-teal-300/80",
-};
 
 type Props = {
   rooms: Room[];
@@ -77,7 +70,7 @@ export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
         boxSizing: "border-box",
       }}
     >
-      <h2 className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-500">
+      <h2 className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500">
         Rooms
       </h2>
       <nav
@@ -101,24 +94,18 @@ export function RoomSidebar({ rooms, selectedId, onSelect }: Props) {
               )}
             >
               <span
-                className="h-2 w-2 shrink-0 rounded-full"
+                className="h-3 w-3 shrink-0 rounded-full"
                 style={{ backgroundColor: room.color }}
                 aria-hidden
               />
-              <span className="min-w-0 flex-1 truncate text-left text-[13px] font-medium text-gray-100">
-                {room.name}
-              </span>
-              <span className="shrink-0 text-[10px] text-gray-600">
-                {category}
-              </span>
-              <span
-                className={cn(
-                  "shrink-0 text-[9px] font-semibold",
-                  STATUS_COLORS[room.status]
-                )}
-              >
-                {ROOM_STATUS_LABELS[room.status]}
-              </span>
+              <div className="min-w-0 flex-1 text-left">
+                <div className="text-[13px] font-semibold leading-snug text-gray-100">
+                  {room.name}
+                </div>
+                <div className="text-[11px] leading-tight text-gray-500">
+                  {category}
+                </div>
+              </div>
             </button>
           );
         })}
