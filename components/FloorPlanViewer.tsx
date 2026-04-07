@@ -298,8 +298,8 @@ export function FloorPlanViewer({
         </FloorPlanCanvas>
       </div>
 
-      {/* Compass rose — HTML overlay so it stays crisp at any size */}
-      <div className="pointer-events-none absolute right-4 top-4 z-20 flex flex-col items-center">
+      {/* Compass rose — HTML overlay, top-center between floating panels */}
+      <div className="pointer-events-none absolute left-1/2 top-4 z-20 flex -translate-x-1/2 flex-col items-center">
         <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-white/[0.12] bg-black/55 shadow-xl shadow-black/40 backdrop-blur-md sm:h-[4.5rem] sm:w-[4.5rem]">
           {/* Outer tick ring */}
           <svg
