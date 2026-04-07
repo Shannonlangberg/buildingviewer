@@ -89,12 +89,6 @@ export function FloorPlanCanvas({
       </defs>
 
       <style>{`
-        @keyframes marchingAnts {
-          to { stroke-dashoffset: -3.6; }
-        }
-        .zone-marching-ants {
-          animation: marchingAnts 0.8s linear infinite;
-        }
         @keyframes pulseGlow {
           0%, 100% { filter: url(#zonePulseGlow); }
           50% { filter: url(#zoneGlow); }

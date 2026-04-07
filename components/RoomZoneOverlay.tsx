@@ -58,12 +58,7 @@ export function RoomZoneOverlay({
             ? "rgba(255,255,255,0.55)"
             : "rgba(255,255,255,0.25)";
 
-        const dashProps = isSel
-          ? {
-              strokeDasharray: "1.2 0.6",
-              className: "zone-marching-ants",
-            }
-          : {};
+        const dashProps = {};
 
         const common = {
           fill: room.color,
