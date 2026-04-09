@@ -84,6 +84,24 @@ export async function POST(request: Request) {
     const path = `floorplans/${fp.id}-${Date.now()}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
+    // Remove previous uploaded base from storage if it exists
+    const { data: prevFp } = await supabase
+      .from("floorplans")
+      .select("image_path")
+      .eq("id", fp.id)
+      .single();
+    if (prevFp?.image_path) {
+      const prevKey = prevFp.image_path.match(
+        /\/storage\/v1\/object\/public\/[^/]+\/(.+)$/
+      );
+      if (prevKey?.[1]?.startsWith("floorplans/")) {
+        await supabase.storage
+          .from(BUCKET)
+          .remove([decodeURIComponent(prevKey[1])])
+          .catch(() => {});
+      }
+    }
+
     const { error: upErr } = await supabase.storage
       .from(BUCKET)
       .upload(path, buffer, { contentType: mime, upsert: true });
