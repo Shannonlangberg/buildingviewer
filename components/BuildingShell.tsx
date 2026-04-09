@@ -97,25 +97,41 @@ export function BuildingShell({
 
   useEffect(() => {
     const fp = floorplan?.base_image_transform;
-    if (fp && typeof fp.scale === "number") {
-      const next = { scale: fp.scale, offsetX: fp.offsetX ?? 0, offsetY: fp.offsetY ?? 0 };
+    const isNonDefault = (t: BaseImageTransform) =>
+      t.scale !== 1 || t.offsetX !== 0 || t.offsetY !== 0;
+
+    const serverHasCustom =
+      fp && typeof fp.scale === "number" && isNonDefault(fp as BaseImageTransform);
+
+    if (serverHasCustom) {
+      const next = { scale: fp!.scale, offsetX: fp!.offsetX ?? 0, offsetY: fp!.offsetY ?? 0 };
       setBaseImageTransform(next);
       try {
         localStorage.setItem(FLOORPLAN_BASE_TRANSFORM_KEY, JSON.stringify(next));
       } catch { /* private mode */ }
       return;
     }
+
+    let local: BaseImageTransform | null = null;
     try {
       const raw = localStorage.getItem(FLOORPLAN_BASE_TRANSFORM_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as Partial<BaseImageTransform>;
-      setBaseImageTransform({
-        scale: parsed.scale ?? 1,
-        offsetX: parsed.offsetX ?? 0,
-        offsetY: parsed.offsetY ?? 0,
-      });
-    } catch {
-      /* private mode */
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<BaseImageTransform>;
+        local = {
+          scale: parsed.scale ?? 1,
+          offsetX: parsed.offsetX ?? 0,
+          offsetY: parsed.offsetY ?? 0,
+        };
+      }
+    } catch { /* private mode */ }
+
+    if (local && isNonDefault(local)) {
+      setBaseImageTransform(local);
+      fetch("/api/floorplans", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base_image_transform: local }),
+      }).catch(() => {});
     }
   }, [floorplan]);
 
