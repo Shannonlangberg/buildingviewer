@@ -361,8 +361,8 @@ export function BuildingShell({
   const [mobileTab, setMobileTab] = useState<"plan" | "rooms" | "gallery">("plan");
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-app-bg text-gray-200">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-app-header">
+    <div className={`flex flex-col bg-app-bg text-gray-200 ${editMode ? "h-[100dvh] overflow-hidden" : "min-h-[100dvh]"}`}>
+      <header className="shrink-0 sticky top-0 z-40 border-b border-white/10 bg-app-header">
         <div className="relative mx-auto flex h-12 max-w-[1600px] items-center justify-between px-3 sm:h-16 sm:px-7">
           <div className="flex w-20 shrink-0 items-center sm:w-32">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -392,7 +392,7 @@ export function BuildingShell({
       </header>
 
       {showEditChrome && (
-        <div className="mx-auto w-full max-w-[1600px] px-3 pt-4 sm:px-6 sm:pt-6">
+        <div className={`mx-auto w-full max-w-[1600px] px-3 pt-4 sm:px-6 sm:pt-6 ${editMode ? "shrink-0 overflow-y-auto" : ""}`} style={editMode ? { maxHeight: "40vh" } : undefined}>
           <FloorPlanEditor
             editMode={editMode}
             selectedRoom={selectedRoom}
@@ -439,7 +439,7 @@ export function BuildingShell({
       )}
 
       {/* ─── MOBILE TAB BAR (below lg) ─── */}
-      <div className="sticky top-12 z-30 flex border-b border-white/10 bg-app-header/95 backdrop-blur-md lg:hidden">
+      <div className="shrink-0 sticky top-12 z-30 flex border-b border-white/10 bg-app-header/95 backdrop-blur-md lg:hidden">
         {(["plan", "rooms", "gallery"] as const).map((tab) => (
           <button
             key={tab}
@@ -457,7 +457,7 @@ export function BuildingShell({
       </div>
 
       {/* ─── MAIN CONTENT ─── */}
-      <main className="canvas-texture relative flex-1">
+      <main className={`canvas-texture relative flex-1 ${editMode ? "min-h-0 overflow-hidden" : ""}`}>
         {/* ─── DESKTOP: floating panels over full canvas ─── */}
         <div className="absolute inset-0 hidden lg:block">
           <FloorPlanViewer
@@ -471,7 +471,7 @@ export function BuildingShell({
             baseImageTransform={baseImageTransform}
           />
         </div>
-        <div className="pointer-events-none relative z-10 hidden min-h-[calc(100dvh-4rem)] flex-col gap-4 p-5 lg:flex lg:flex-row lg:items-stretch">
+        <div className={`pointer-events-none relative z-10 hidden flex-col gap-4 p-5 lg:flex lg:flex-row lg:items-stretch ${editMode ? "h-full" : "min-h-[calc(100dvh-4rem)]"}`}>
           <div className="pointer-events-auto w-[250px] shrink-0 xl:w-[270px]">
             <RoomSidebar
               rooms={displayRooms}
@@ -555,7 +555,7 @@ export function BuildingShell({
         </div>
       </main>
 
-      <footer className="mt-auto border-t border-white/10 bg-app-header" style={{ paddingBottom: "max(0.875rem, var(--safe-bottom))" }}>
+      <footer className="mt-auto shrink-0 border-t border-white/10 bg-app-header" style={{ paddingBottom: "max(0.875rem, var(--safe-bottom))" }}>
         <div className="mx-auto flex max-w-[1600px] items-center justify-center gap-2 px-5 pt-3 text-center text-[11px] text-gray-500 sm:pt-4">
           <span>© {new Date().getFullYear()} Mt Barker Building</span>
         </div>

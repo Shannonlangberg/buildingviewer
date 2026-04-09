@@ -319,12 +319,25 @@ export function FloorPlanViewer({
 
   const resetView = () => setViewport(DEFAULT_FLOORPLAN_VIEWPORT);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!editMode) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [editMode]);
+
   const backdropClick = () => {
     onSelectRoom(null);
   };
 
   return (
-    <div className="relative h-full w-full overflow-hidden" onPointerMove={handlePointerMove}>
+    <div ref={containerRef} className="relative h-full w-full overflow-hidden" onPointerMove={handlePointerMove}>
       <div className="relative h-full w-full">
         <FloorPlanCanvas
           floorplan={floorplan}
