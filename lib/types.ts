@@ -19,10 +19,9 @@ export interface Floorplan {
 }
 
 export interface BaseImageTransform {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  scale: number;
+  offsetX: number;
+  offsetY: number;
 }
 
 export interface Room {

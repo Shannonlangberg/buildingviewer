@@ -518,18 +518,17 @@ export function FloorPlanEditor({
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                   Base plan position &amp; size
                 </p>
-                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
+                <div className="mt-2 space-y-2">
                   {([
-                    { key: "x" as const, label: "X offset", min: -50, max: 50, step: 0.5 },
-                    { key: "y" as const, label: "Y offset", min: -50, max: 50, step: 0.5 },
-                    { key: "width" as const, label: "Width", min: 10, max: 200, step: 1 },
-                    { key: "height" as const, label: "Height", min: 10, max: 200, step: 1 },
-                  ] as const).map(({ key, label, min, max, step }) => (
+                    { key: "scale" as const, label: "Scale", min: 0.3, max: 2.5, step: 0.01, fmt: (v: number) => `${Math.round(v * 100)}%` },
+                    { key: "offsetX" as const, label: "Shift left/right", min: -40, max: 40, step: 0.5, fmt: (v: number) => v.toFixed(1) },
+                    { key: "offsetY" as const, label: "Shift up/down", min: -40, max: 40, step: 0.5, fmt: (v: number) => v.toFixed(1) },
+                  ] as const).map(({ key, label, min, max, step, fmt }) => (
                     <div key={key}>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[10px] text-slate-500">{label}</span>
                         <span className="tabular-nums text-[10px] text-slate-400">
-                          {baseImageTransform[key].toFixed(key === "x" || key === "y" ? 1 : 0)}
+                          {fmt(baseImageTransform[key])}
                         </span>
                       </div>
                       <input
@@ -557,14 +556,14 @@ export function FloorPlanEditor({
                 <button
                   type="button"
                   onClick={() =>
-                    onBaseImageTransformChange({ x: 0, y: 0, width: 100, height: 100 })
+                    onBaseImageTransformChange({ scale: 1, offsetX: 0, offsetY: 0 })
                   }
                   className="mt-2 rounded-md border border-white/15 bg-app-inset px-2 py-1 text-[10px] font-medium text-gray-300 hover:border-white/25 hover:bg-app-raised"
                 >
                   Reset position &amp; size
                 </button>
                 <p className="mt-1.5 text-[10px] leading-snug text-slate-600">
-                  Adjust where the uploaded plan sits relative to room zones. Saved in this browser.
+                  Scale and shift the uploaded plan under the room zones. Room zones stay fixed. Saved in this browser.
                 </p>
               </div>
               <div className="border-t border-white/10 pt-3">

@@ -11,10 +11,9 @@ import {
 const DEFAULT_BASE_LAYER_OPACITY = 0.82;
 
 export const DEFAULT_BASE_IMAGE_TRANSFORM: BaseImageTransform = {
-  x: 0,
-  y: 0,
-  width: 100,
-  height: 100,
+  scale: 1,
+  offsetX: 0,
+  offsetY: 0,
 };
 
 type Props = {
@@ -112,22 +111,24 @@ export function FloorPlanCanvas({
           data-floorplan-base="true"
           onClick={onBackdropClick ? backdropClick : undefined}
         >
-          {useInlineSvg ? (
-            <g
-              dangerouslySetInnerHTML={{ __html: floorplan!.svg_content! }}
-              style={{ opacity }}
-            />
-          ) : (
-            <image
-              href={baseSrc}
-              x={baseImageTransform.x}
-              y={baseImageTransform.y}
-              width={baseImageTransform.width}
-              height={baseImageTransform.height}
-              preserveAspectRatio="xMidYMid meet"
-              style={{ opacity }}
-            />
-          )}
+          <g transform={`translate(${baseImageTransform.offsetX} ${baseImageTransform.offsetY}) translate(50 50) scale(${baseImageTransform.scale}) translate(-50 -50)`}>
+            {useInlineSvg ? (
+              <g
+                dangerouslySetInnerHTML={{ __html: floorplan!.svg_content! }}
+                style={{ opacity }}
+              />
+            ) : (
+              <image
+                href={baseSrc}
+                x={0}
+                y={0}
+                width={100}
+                height={100}
+                preserveAspectRatio="xMidYMid meet"
+                style={{ opacity }}
+              />
+            )}
+          </g>
         </g>
         {children}
       </g>

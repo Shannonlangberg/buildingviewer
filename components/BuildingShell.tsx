@@ -95,10 +95,9 @@ export function BuildingShell({
       if (!raw) return;
       const parsed = JSON.parse(raw) as Partial<BaseImageTransform>;
       setBaseImageTransform({
-        x: parsed.x ?? 0,
-        y: parsed.y ?? 0,
-        width: parsed.width ?? 100,
-        height: parsed.height ?? 100,
+        scale: parsed.scale ?? 1,
+        offsetX: parsed.offsetX ?? 0,
+        offsetY: parsed.offsetY ?? 0,
       });
     } catch {
       /* private mode */
