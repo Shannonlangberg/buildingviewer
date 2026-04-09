@@ -164,9 +164,15 @@ export function BuildingShell({
           setLiveCapabilities(data);
         }
       })
-      .catch(() => {
-        /* keep initialCapabilities from server */
-      });
+      .catch(() => {});
+    fetch("/api/floorplans", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { floorplan?: Floorplan } | null) => {
+        if (!cancelled && data?.floorplan) {
+          setFloorplan(data.floorplan);
+        }
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
