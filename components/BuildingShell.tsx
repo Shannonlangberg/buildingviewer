@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CapabilitiesPayload } from "@/lib/server-capabilities";
 import {
   effectiveLabelFill,
@@ -87,9 +87,24 @@ export function BuildingShell({
   }, []);
 
   const [baseImageTransform, setBaseImageTransform] =
-    useState<BaseImageTransform>(DEFAULT_BASE_IMAGE_TRANSFORM);
+    useState<BaseImageTransform>(() => {
+      const fp = initialFloorplan?.base_image_transform;
+      if (fp && typeof fp.scale === "number") {
+        return { scale: fp.scale, offsetX: fp.offsetX ?? 0, offsetY: fp.offsetY ?? 0 };
+      }
+      return DEFAULT_BASE_IMAGE_TRANSFORM;
+    });
 
   useEffect(() => {
+    const fp = floorplan?.base_image_transform;
+    if (fp && typeof fp.scale === "number") {
+      const next = { scale: fp.scale, offsetX: fp.offsetX ?? 0, offsetY: fp.offsetY ?? 0 };
+      setBaseImageTransform(next);
+      try {
+        localStorage.setItem(FLOORPLAN_BASE_TRANSFORM_KEY, JSON.stringify(next));
+      } catch { /* private mode */ }
+      return;
+    }
     try {
       const raw = localStorage.getItem(FLOORPLAN_BASE_TRANSFORM_KEY);
       if (!raw) return;
@@ -102,16 +117,24 @@ export function BuildingShell({
     } catch {
       /* private mode */
     }
-  }, []);
+  }, [floorplan]);
+
+  const saveTransformTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setBaseImageTransformPersisted = useCallback(
     (next: BaseImageTransform) => {
       setBaseImageTransform(next);
       try {
         localStorage.setItem(FLOORPLAN_BASE_TRANSFORM_KEY, JSON.stringify(next));
-      } catch {
-        /* private mode */
-      }
+      } catch { /* private mode */ }
+      if (saveTransformTimer.current) clearTimeout(saveTransformTimer.current);
+      saveTransformTimer.current = setTimeout(() => {
+        fetch("/api/floorplans", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ base_image_transform: next }),
+        }).catch(() => {});
+      }, 800);
     },
     []
   );

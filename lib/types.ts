@@ -16,6 +16,7 @@ export interface Floorplan {
   image_y?: number | null;
   image_width?: number | null;
   image_height?: number | null;
+  base_image_transform?: BaseImageTransform | null;
 }
 
 export interface BaseImageTransform {
