@@ -12,6 +12,17 @@ export interface Floorplan {
   svg_content: string | null;
   is_active: boolean;
   created_at: string;
+  image_x?: number | null;
+  image_y?: number | null;
+  image_width?: number | null;
+  image_height?: number | null;
+}
+
+export interface BaseImageTransform {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export interface Room {

@@ -6,7 +6,8 @@ import {
   effectiveLabelFill,
   effectiveLabelFontSize,
 } from "@/lib/room-label-style";
-import type { Floorplan, Room } from "@/lib/types";
+import type { BaseImageTransform, Floorplan, Room } from "@/lib/types";
+import { DEFAULT_BASE_IMAGE_TRANSFORM } from "./FloorPlanCanvas";
 import { FloorPlanEditor } from "./FloorPlanEditor";
 import { FloorPlanViewer } from "./FloorPlanViewer";
 import { RoomDetailPanel } from "./RoomDetailPanel";
@@ -14,6 +15,7 @@ import { RoomSidebar } from "./RoomSidebar";
 
 const LAYOUT_SESSION_KEY = "mtb-layout-tools-on";
 const FLOORPLAN_BASE_OPACITY_KEY = "mtb-floorplan-base-opacity";
+const FLOORPLAN_BASE_TRANSFORM_KEY = "mtb-floorplan-base-transform";
 const DEFAULT_FLOORPLAN_BASE_OPACITY = 0.82;
 
 function editQueryEnabled(search: string): boolean {
@@ -83,6 +85,37 @@ export function BuildingShell({
       /* private mode */
     }
   }, []);
+
+  const [baseImageTransform, setBaseImageTransform] =
+    useState<BaseImageTransform>(DEFAULT_BASE_IMAGE_TRANSFORM);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(FLOORPLAN_BASE_TRANSFORM_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<BaseImageTransform>;
+      setBaseImageTransform({
+        x: parsed.x ?? 0,
+        y: parsed.y ?? 0,
+        width: parsed.width ?? 100,
+        height: parsed.height ?? 100,
+      });
+    } catch {
+      /* private mode */
+    }
+  }, []);
+
+  const setBaseImageTransformPersisted = useCallback(
+    (next: BaseImageTransform) => {
+      setBaseImageTransform(next);
+      try {
+        localStorage.setItem(FLOORPLAN_BASE_TRANSFORM_KEY, JSON.stringify(next));
+      } catch {
+        /* private mode */
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -400,6 +433,8 @@ export function BuildingShell({
             labelStyleSaving={labelStyleSaving}
             baseLayerOpacity={baseLayerOpacity}
             onBaseLayerOpacityChange={setBaseLayerOpacityPersisted}
+            baseImageTransform={baseImageTransform}
+            onBaseImageTransformChange={setBaseImageTransformPersisted}
           />
         </div>
       )}
@@ -434,6 +469,7 @@ export function BuildingShell({
             editMode={editMode}
             onRoomsDirty={editMode ? setDraftRooms : undefined}
             baseLayerOpacity={baseLayerOpacity}
+            baseImageTransform={baseImageTransform}
           />
         </div>
         <div className="pointer-events-none relative z-10 hidden min-h-[calc(100dvh-4rem)] flex-col gap-4 p-5 lg:flex lg:flex-row lg:items-stretch">
@@ -472,6 +508,7 @@ export function BuildingShell({
                 editMode={editMode}
                 onRoomsDirty={editMode ? setDraftRooms : undefined}
                 baseLayerOpacity={baseLayerOpacity}
+                baseImageTransform={baseImageTransform}
               />
             </div>
             {selectedRoom && (

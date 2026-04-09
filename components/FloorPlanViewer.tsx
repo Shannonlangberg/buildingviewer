@@ -13,7 +13,7 @@ import {
   type FloorplanViewport,
 } from "@/lib/floorplan-viewport";
 import { removePolygonVertex } from "@/lib/polygon-edit";
-import type { Floorplan, RectResizeHandleId, Room } from "@/lib/types";
+import type { BaseImageTransform, Floorplan, RectResizeHandleId, Room } from "@/lib/types";
 import { ROOM_STATUS_LABELS } from "@/lib/types";
 import { parsePolygonPoints, serializePolygonPoints } from "@/lib/utils";
 import { FloorPlanCanvas } from "./FloorPlanCanvas";
@@ -32,6 +32,7 @@ type Props = {
   onRoomsDirty?: (next: Room[]) => void;
   /** Base blueprint / image under zones (0–1). */
   baseLayerOpacity?: number;
+  baseImageTransform?: BaseImageTransform;
 };
 
 export function FloorPlanViewer({
@@ -42,6 +43,7 @@ export function FloorPlanViewer({
   editMode,
   onRoomsDirty,
   baseLayerOpacity,
+  baseImageTransform,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [viewport, setViewport] = useState<FloorplanViewport>(
@@ -332,6 +334,7 @@ export function FloorPlanViewer({
           viewport={effectiveViewport}
           onBackdropClick={!editMode ? backdropClick : undefined}
           editMode={editMode}
+          baseImageTransform={baseImageTransform}
         >
           <RoomZoneOverlay
             rooms={rooms}

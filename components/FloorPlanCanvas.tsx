@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode, Ref, RefObject } from "react";
-import type { Floorplan } from "@/lib/types";
+import type { BaseImageTransform, Floorplan } from "@/lib/types";
 import {
   buildFloorplanViewportTransform,
   DEFAULT_FLOORPLAN_VIEWPORT,
@@ -9,6 +9,13 @@ import {
 } from "@/lib/floorplan-viewport";
 
 const DEFAULT_BASE_LAYER_OPACITY = 0.82;
+
+export const DEFAULT_BASE_IMAGE_TRANSFORM: BaseImageTransform = {
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 100,
+};
 
 type Props = {
   floorplan: Floorplan | null;
@@ -24,6 +31,8 @@ type Props = {
   onBackdropClick?: () => void;
   /** In edit mode we need touch-none to prevent scroll during drag. */
   editMode?: boolean;
+  /** Position and size of the base plan image in SVG viewBox units. */
+  baseImageTransform?: BaseImageTransform;
 };
 
 /**
@@ -39,6 +48,7 @@ export function FloorPlanCanvas({
   viewport = DEFAULT_FLOORPLAN_VIEWPORT,
   onBackdropClick,
   editMode = false,
+  baseImageTransform = DEFAULT_BASE_IMAGE_TRANSFORM,
 }: Props) {
   const opacity = Math.min(1, Math.max(0, baseLayerOpacity));
   const imagePath = floorplan?.image_path?.trim();
@@ -110,8 +120,10 @@ export function FloorPlanCanvas({
           ) : (
             <image
               href={baseSrc}
-              width={100}
-              height={100}
+              x={baseImageTransform.x}
+              y={baseImageTransform.y}
+              width={baseImageTransform.width}
+              height={baseImageTransform.height}
               preserveAspectRatio="xMidYMid meet"
               style={{ opacity }}
             />

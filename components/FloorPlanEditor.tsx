@@ -10,7 +10,7 @@ import {
   effectiveLabelFontSize,
   hexForLabelColorPicker,
 } from "@/lib/room-label-style";
-import type { Floorplan, Room } from "@/lib/types";
+import type { BaseImageTransform, Floorplan, Room } from "@/lib/types";
 import { ROOM_STATUS_LABELS } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { FloorplanBaseUpload } from "./FloorplanBaseUpload";
@@ -45,6 +45,8 @@ type Props = {
   labelStyleSaving: boolean;
   baseLayerOpacity: number;
   onBaseLayerOpacityChange: (opacity: number) => void;
+  baseImageTransform: BaseImageTransform;
+  onBaseImageTransformChange: (t: BaseImageTransform) => void;
 };
 
 function LocalPersistHint({
@@ -374,6 +376,8 @@ export function FloorPlanEditor({
   labelStyleSaving,
   baseLayerOpacity,
   onBaseLayerOpacityChange,
+  baseImageTransform,
+  onBaseImageTransformChange,
 }: Props) {
   const r = selectedRoom
     ? draftRooms.find((x) => x.id === selectedRoom.id) ?? selectedRoom
@@ -508,6 +512,59 @@ export function FloorPlanEditor({
                 <p className="mt-1.5 text-[10px] leading-snug text-slate-600">
                   Fades the blueprint or uploaded image under room zones. Saved
                   in this browser only.
+                </p>
+              </div>
+              <div className="border-t border-white/10 pt-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  Base plan position &amp; size
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
+                  {([
+                    { key: "x" as const, label: "X offset", min: -50, max: 50, step: 0.5 },
+                    { key: "y" as const, label: "Y offset", min: -50, max: 50, step: 0.5 },
+                    { key: "width" as const, label: "Width", min: 10, max: 200, step: 1 },
+                    { key: "height" as const, label: "Height", min: 10, max: 200, step: 1 },
+                  ] as const).map(({ key, label, min, max, step }) => (
+                    <div key={key}>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] text-slate-500">{label}</span>
+                        <span className="tabular-nums text-[10px] text-slate-400">
+                          {baseImageTransform[key].toFixed(key === "x" || key === "y" ? 1 : 0)}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={min}
+                        max={max}
+                        step={step}
+                        value={baseImageTransform[key]}
+                        onChange={(e) =>
+                          onBaseImageTransformChange({
+                            ...baseImageTransform,
+                            [key]: Number(e.target.value),
+                          })
+                        }
+                        className={cn(
+                          "mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10",
+                          "[&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gray-400 [&::-webkit-slider-thumb]:shadow-md",
+                          "[&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:cursor-grab [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-gray-400"
+                        )}
+                        aria-label={label}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onBaseImageTransformChange({ x: 0, y: 0, width: 100, height: 100 })
+                  }
+                  className="mt-2 rounded-md border border-white/15 bg-app-inset px-2 py-1 text-[10px] font-medium text-gray-300 hover:border-white/25 hover:bg-app-raised"
+                >
+                  Reset position &amp; size
+                </button>
+                <p className="mt-1.5 text-[10px] leading-snug text-slate-600">
+                  Adjust where the uploaded plan sits relative to room zones. Saved in this browser.
                 </p>
               </div>
               <div className="border-t border-white/10 pt-3">
